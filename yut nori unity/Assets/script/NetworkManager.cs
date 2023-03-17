@@ -39,17 +39,30 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         Connecting = true;
         Disconnecting = false;
-        PhotonNetwork.ConnectUsingSettings();
-        
+        PhotonNetwork.ConnectUsingSettings();        
+
     }
 
     public override void OnConnectedToMaster()
     {
 
         PhotonNetwork.LocalPlayer.NickName = NickNameInput.text;
-        DisconnectButtonText.text = "¿¬°á ²÷±â";
+        PhotonNetwork.JoinLobby();
+
+        
+
+    }
+
+    public override void OnJoinedLobby()
+    {
+        DisconnectButtonText.text = "Á¢¼Ó ²÷±â";
         BeforeConnectedLobby.SetActive(false);
         AfterConnectedLobby.SetActive(true);
+
+        print(PhotonNetwork.PlayerList.ToString());
+        print(PhotonNetwork.PlayerList);
+        print(PhotonNetwork.PlayerList.Length);
+        print(PhotonNetwork.PlayerList.ToStringFull());
     }
 
     public void DisconnectButtonClick()
