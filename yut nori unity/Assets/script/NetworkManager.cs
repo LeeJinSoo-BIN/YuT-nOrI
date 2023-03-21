@@ -22,7 +22,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public GameObject LobbyPanel;
     public TMP_Text DisconnectButtonText;
-
+    public GameObject LobbyButtonList;
 
     public GameObject CreateRoomPanel;
     public TMP_InputField RoomNameToCreat;
@@ -30,13 +30,23 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject InRoomPanel;
     public TMP_Text RoomNameInRoomPanel;
     public TMP_Text ChatLog;
-    public GameObject ChatBox;
+    public TMP_InputField ChatInputField;    
+    public GameObject ChatLogList;
+    public int MaxChatLog;
     public GameObject RoomMemberList;
     public GameObject RoomMemberInfo;
-    
+    public Button StartButton;
+    public Button ReadyButton;
+    public GameObject ReadyInRoomPanel;
+
+
     public GameObject JoinRoomPanel;
     public GameObject RoomList;
     public GameObject RoomInfo;
+
+    public PhotonView PV;
+    public GameObject WaitCanvas;
+    public GameObject GameCanvas;
 
     private void Awake()
     {
@@ -62,11 +72,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             DisconnectButtonText.text = PhotonNetwork.NetworkClientState.ToString();
         }
-       
+
         //print("In lobby player list : " + PhotonNetwork.PlayerList.Length); // 룸에 있는 플레이어 리스트
         //print("In lobby count of players : " + PhotonNetwork.CountOfPlayers);// 전체 플레이어 수
-            
-           
+        
+        if(CreateRoomPanel.activeSelf || InRoomPanel.activeSelf || JoinRoomPanel.activeSelf)
+        {
+            turn_on_buttons(false);
+        }
+        else
+        {
+            turn_on_buttons(true);
+        }
+        if (ChatInputField.text.Length > 0 && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {            
+            PV.RPC("send_message", RpcTarget.All, PhotonNetwork.LocalPlayer.NickName + " : " + ChatInputField.text);
+            ChatInputField.text = "";            
+            ChatInputField.ActivateInputField();
+        }
+
+
     }
 
     public void ConnectButtonClick()
@@ -120,6 +145,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void CreateRoomButtonClickInPanel()
     {
         PhotonNetwork.CreateRoom(RoomNameToCreat.text, new RoomOptions { MaxPlayers = 2 });
+        CreateRoomPanel.SetActive(false);
         //PhotonNetwork.JoinRoom(RoomNameToCreat.text);
     }
 
@@ -129,30 +155,28 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         LobbyPanel.SetActive(false);
         JoinRoomPanel.SetActive(false);
         RoomNameInRoomPanel.text = PhotonNetwork.CurrentRoom.Name;
-        delete_room_member();
-        add_room_member();
-
+        update_room_member();
+        delete_chat_log();        
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        delete_room_member();
-        add_room_member();
+        update_room_member();
+        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + newPlayer.NickName + "님이 입장하셨습니다</color>");
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        delete_room_member();
-        add_room_member();
+        update_room_member();
+        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "님이 퇴장하셨습니다</color>");
+        PV.RPC("ready", RpcTarget.AllBuffered, false);        
     }
-    void delete_room_member()
+    
+    void update_room_member()
     {
         for (int k = 0; k < RoomMemberList.transform.childCount; k++)
         {
             Destroy(RoomMemberList.transform.GetChild(k).gameObject);
         }
-    }
-    void add_room_member()
-    {
         for (int k = 0; k < PhotonNetwork.PlayerList.Length; k++)
         {
             GameObject member_info = Instantiate(RoomMemberInfo);
@@ -161,10 +185,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if (PhotonNetwork.PlayerList[k].IsMasterClient)
             {
                 member_nickname += " (*)";
+                
             }
             member_info.transform.GetChild(0).GetComponent<TMP_Text>().text = member_nickname;
             member_info.SetActive(true);
         }
+        StartButton.interactable = PhotonNetwork.LocalPlayer.IsMasterClient;
+        ReadyButton.interactable = !PhotonNetwork.LocalPlayer.IsMasterClient;
+    }
+
+    void delete_chat_log()
+    {
+        for (int k = 0; k < ChatLogList.transform.childCount; k++)
+        {
+            Destroy(ChatLogList.transform.GetChild(k).gameObject);
+        }
+        ChatInputField.text = "";
     }
 
     public void JoinRoomButtonClickInLobby()
@@ -175,9 +211,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         print("room list updated");
-        UpdateRoomList(roomList);
-        
+        UpdateRoomList(roomList);        
     }
+    
 
     void UpdateRoomList(List<RoomInfo> roomList)
     {
@@ -209,11 +245,89 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void LeaveRoomButtonClick()
     {
-        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LeaveRoom();        
         InRoomPanel.SetActive(false);
         LobbyPanel.SetActive(true);
+        ChatInputField.text = "";
+        ready(false);
     }  
 
+    void turn_on_buttons(bool onoff)
+    {
+        for (int k = 0; k < LobbyButtonList.transform.childCount; k++)
+        {
+            if (k == 2) continue;
+            LobbyButtonList.transform.GetChild(k).transform.GetComponent<Button>().interactable = onoff;
+        }
+    }
+
+    public void ReadyButtonClick()
+    {        
+        PV.RPC("ready", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
+    }
+    public void StartButtonClick()
+    {
+        if (ReadyInRoomPanel.activeSelf)
+        {
+            PV.RPC("ready", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
+            PV.RPC("start_game", RpcTarget.All);            
+        }
+    }
+    
+    public void EndGameButtonClick()
+    {
+        PV.RPC("end_game", RpcTarget.All);
+    }
+
+    [PunRPC]
+    void send_message(string msg)
+    {
+        print("chatchatchat");
+        TMP_Text chat = Instantiate(ChatLog);
+        chat.text = msg;
+        if(ChatLogList.transform.childCount == MaxChatLog)
+        {
+            Destroy(ChatLogList.transform.GetChild(0).gameObject);
+        }
+        chat.transform.SetParent(ChatLogList.transform);
+        chat.gameObject.SetActive(true);
+        chat.transform.localScale = new Vector3(1, 1, 1);
+    }
+    
+    [PunRPC]
+    void ready(bool isReady)
+    {
+        ReadyInRoomPanel.SetActive(isReady);
+        string NickName = "";
+        for(int k = 0; k< PhotonNetwork.PlayerList.Length; k++)
+        {
+            if (!PhotonNetwork.PlayerList[k].IsMasterClient)
+                NickName = PhotonNetwork.PlayerList[k].NickName;
+
+        }
+        for (int k = 0; k < RoomMemberList.transform.childCount; k++)
+        {
+            if (RoomMemberList.transform.GetChild(k).GetChild(0).GetComponent<TMP_Text>().text == NickName)
+            {
+                RoomMemberList.transform.GetChild(k).GetChild(1).gameObject.SetActive(isReady);
+            }
+
+        }
+    }
+
+    [PunRPC]
+    void start_game()
+    {
+        WaitCanvas.SetActive(false);
+        GameCanvas.SetActive(true);
+    }
+
+    [PunRPC]
+    void end_game()
+    {
+        WaitCanvas.SetActive(true);
+        GameCanvas.SetActive(false);
+    }
     
 }
 
