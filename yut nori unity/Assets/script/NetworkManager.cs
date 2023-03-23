@@ -54,6 +54,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     void Start()
     {
+        WaitCanvas.SetActive(true);
+        GameCanvas.SetActive(false);
+
         LoginPanel.SetActive(true);
         LobbyPanel.SetActive(false);
         CreateRoomPanel.SetActive(false);
@@ -270,14 +273,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         if (ReadyInRoomPanel.activeSelf)
         {
             PV.RPC("ready", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
-            PV.RPC("start_game", RpcTarget.All);            
+            PV.RPC("start_game", RpcTarget.All);
         }
     }
     
-    public void EndGameButtonClick()
-    {
-        PV.RPC("end_game", RpcTarget.All);
-    }
+    
 
     [PunRPC]
     void send_message(string msg)
@@ -319,15 +319,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void start_game()
     {
         WaitCanvas.SetActive(false);
-        GameCanvas.SetActive(true);
+        GameCanvas.SetActive(true);  
     }
 
-    [PunRPC]
-    void end_game()
-    {
-        WaitCanvas.SetActive(true);
-        GameCanvas.SetActive(false);
-    }
+   
     
 }
 

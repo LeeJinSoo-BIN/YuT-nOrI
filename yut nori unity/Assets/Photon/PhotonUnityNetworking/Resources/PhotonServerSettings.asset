@@ -44,6 +44,12 @@ MonoBehaviour:
   - ready
   - start_game
   - end_game
+  - setting_game
+  - move_mal
+  - roll_yut
+  - rolled_yut
+  - set_turn
+  - set_turn_and_character
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
