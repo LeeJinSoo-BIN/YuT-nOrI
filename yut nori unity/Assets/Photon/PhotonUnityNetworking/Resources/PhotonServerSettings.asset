@@ -50,6 +50,7 @@ MonoBehaviour:
   - rolled_yut
   - set_turn
   - set_turn_and_character
+  - moving_mal
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

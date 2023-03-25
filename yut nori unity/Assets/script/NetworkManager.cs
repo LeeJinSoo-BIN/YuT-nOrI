@@ -322,8 +322,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         GameCanvas.SetActive(true);  
     }
 
-   
-    
+
+    public void CloseButtonClick()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
+        current_clicked_button.transform.parent.gameObject.SetActive(false);
+    }
 }
 
 
