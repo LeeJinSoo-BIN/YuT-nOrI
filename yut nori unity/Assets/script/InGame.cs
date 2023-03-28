@@ -7,28 +7,30 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class InGame        : MonoBehaviourPunCallbacks
+public class InGame : MonoBehaviourPunCallbacks
 {
     // Start is called before the first frame update
 
     public Sprite[] YutGarak;
     public Sprite[] YutAnimal;
     public Sprite[] Ganzi;
-    private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!" };
+    private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!", "µµÂø!" };
     private Color[] YutColor = new Color[] { new Color(255 / 255f, 223 / 255f, 206 / 255f, 1f),
                                             new Color(255 / 255f, 170 / 255f, 90 / 255f, 1f),
                                             new Color(222 / 255f, 219 / 255f, 236 / 255f, 1f),                                            
                                             new Color(55 / 255f, 94 / 255f, 126 / 255f, 1f),
                                             new Color(228 / 255f, 147 / 255f, 107 / 255f, 1f),
-                                            new Color(206 / 255f, 255 / 255f, 223 / 255f, 1f)};
+                                            new Color(206 / 255f, 255 / 255f, 223 / 255f, 1f),
+                                            new Color(200 / 255f, 200 / 255f, 200 / 255f, 0.5f),
+                                            new Color(255 / 255f, 128 / 255f, 128 / 255f, 1f)};
     public GameObject ReadyInRoomPanel;
 
     public GameObject MyInfoList;
     public GameObject OpInfoList;
     private TMP_Text MyName;
     private TMP_Text OpName;
-    private GameObject MyMalList;
-    private GameObject OpMalList;
+    private GameObject MyStartMalList;
+    private GameObject OpStartMalList;
     private GameObject MyEspList;
     private GameObject OpEspList;
     private GameObject MyYutStackList;
@@ -36,23 +38,29 @@ public class InGame        : MonoBehaviourPunCallbacks
 
     public Button RollButton;
     public GameObject RollingYut;
-    private float BackProbability = 42f;
+    public float BackProbability = 42f;
     //private float FrontProbability = 58f;
     public int CurrentYut;
-    public bool IsRolling = false;
-    public bool IsRolled = false;
     public bool MyTurn = false;
 
-    private bool IsMyMalClicked = false;
+    public bool IsRollable = false;    
+    public bool IsMalMovable = false;
+    public bool IsRolling = false;
+    public bool IsMoving = false;
+    public float MoveSpeed = 2f;
+    
+
+    private bool IsMyStartMalClicked = false;
+    private bool IsMyMovedMalClicked = false;
     public GameObject Caan;
-    private GameObject MyClickedStartMal;
+    private GameObject MyClickedMovableMal;
     private int[] MyMalPosition = new int[] { -1, -1, -1, -1 };
     private Sprite MyMalImage;
     private Sprite OpMalImage;
     public GameObject MyMovingMal;
     public GameObject OpMovingMal;
     public GameObject MalBox;
-    public bool IsMoving = false;
+    
 
     public PhotonView PV;
     public GameObject WaitCanvas;
@@ -63,8 +71,7 @@ public class InGame        : MonoBehaviourPunCallbacks
     public GameObject Master;
     public GameObject Slave;
     public GameObject Wait;
-    public GameObject MyTurnFlag;
-    public GameObject TurnEndFlag;
+    public GameObject GameEnd;
 
     void Awake()
     {
@@ -75,49 +82,64 @@ public class InGame        : MonoBehaviourPunCallbacks
     void Update()
     {
 
-        if (IsRolling)
+        if (MyTurn)
         {
-            if (IsRolled) {
-                if (MyTurn)
+            IsMalMovable = Check_Mal_Movable(MyYutStackList, MyStartMalList);
+            if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving)
+            {
+                PV.RPC("change_turn", RpcTarget.All);
+            }
+            if (IsMalMovable && !IsMoving && !IsRolling && !IsMyStartMalClicked)
+            {
+                if (Input.GetMouseButtonDown(0))
                 {
-                    if (IsStackEmpty(MyYutStackList))
+                    Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                    RaycastHit2D hit = Physics2D.Raycast(pos, Vector2.zero);
+                    if (hit.collider != null)
                     {
-                        IsRolling = false;
-                    }                    
-                }
-                else
-                {
-
+                        if (hit.transform.parent.gameObject == MalBox && hit.transform.name[0] == 'M')
+                        {
+                            MovedMalClick(hit.transform.gameObject);
+                        }
+                    }
                 }
             }
         }
         else
         {
-            if (PhotonNetwork.LocalPlayer.IsMasterClient)
-            {
-                if (Baton.transform.parent.name == "Master")
-                    MyTurn = true;
-                else
-                    MyTurn = false;
-            }
-            else if (!PhotonNetwork.LocalPlayer.IsMasterClient)
-            {
-                if (Baton.transform.parent.name == "Slave")
-                    MyTurn = true;
-                else
-                    MyTurn = false;
-            }            
-            else
-            {
-                MyTurn = false;
-            }
-            RollButton.interactable = MyTurn;
+            IsRollable = false;
+            IsMalMovable = false;
         }
-        MyTurnFlag.SetActive(MyTurn);        
+
+        RollButton.interactable = (IsRollable && !IsMoving && !IsRolling);
+
+
+        if (PhotonNetwork.LocalPlayer.IsMasterClient)
+        {
+            if (Baton.transform.parent.name == "Master")
+                MyTurn = true;
+            else
+                MyTurn = false;
+        }
+        else if (!PhotonNetwork.LocalPlayer.IsMasterClient)
+        {
+            if (Baton.transform.parent.name == "Slave")
+                MyTurn = true;
+            else
+                MyTurn = false;
+        }
+        else
+        {
+            MyTurn = false;
+        }
+
+      
+
     }
 
     public void RollButtonClick()
     {
+        IsRollable = false;
         int back_cnt = 0;
         int back_do = 0;
         for(int k = 0; k< 4; k++)        {
@@ -136,7 +158,7 @@ public class InGame        : MonoBehaviourPunCallbacks
         }
         if (back_cnt == 1 && back_do == 1)
         {
-            CurrentYut = 6; // µÞµµ
+            CurrentYut = 1; // µÞµµ
         }
         else if (back_cnt == 0) 
         {
@@ -144,28 +166,29 @@ public class InGame        : MonoBehaviourPunCallbacks
         }
         else
         {
-            CurrentYut = back_cnt; //µµ1 °³2 °É3 À·4 ¸ð5 µÞµµ6 ³«7
+            CurrentYut = back_cnt;
         }
-        CurrentYut--;
+        CurrentYut--;//µµ0 °³1 °É2 À·3 ¸ð4 µÞµµ5 ³«6
         PV.RPC("roll_yut", RpcTarget.All, CurrentYut);
     }
+
     [PunRPC]
     void roll_yut(int rolled_yut)
-    {        
+    {
         RollingYut.SetActive(true);
-        RollButton.interactable = false;
+        IsRolling = true;
+        IsRollable = false;
         RollingYut.transform.GetChild(1).GetComponent<Image>().sprite = YutGarak[7];
         RollingYut.transform.GetChild(2).gameObject.SetActive(false);
-        RollingYut.transform.GetChild(3).gameObject.SetActive(false);
-        IsRolling = true;
-        CurrentYut = rolled_yut;        
+        RollingYut.transform.GetChild(3).gameObject.SetActive(false);        
+        CurrentYut = rolled_yut;
+        
 
-
-        Invoke("rolled_yut_result", 1f);
-        Invoke("rolled_yut_end", 2f);
+        Invoke("show_rolled_yut_and_stack_up", 1f);
+        Invoke("action_rolling_result", 2f);
     }
     
-    void rolled_yut_result()
+    void show_rolled_yut_and_stack_up()
     {
         int rolled_yut = CurrentYut;
         RollingYut.transform.GetChild(2).gameObject.SetActive(true);
@@ -191,48 +214,64 @@ public class InGame        : MonoBehaviourPunCallbacks
                 if (now_count > 0)
                     OpYutStackList.transform.GetChild(rolled_yut).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
             }           
-        }        
+        }
     }
-    void rolled_yut_end()
+    void action_rolling_result()
     {
         int rolled_yut = CurrentYut;
         RollingYut.SetActive(false);
         if (MyTurn)
         {
-            bool stack = false;
-            for(int k = 0; k< 5; k++)
-            {
-                if (int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text) > 0)
-                {
-                    stack = true;
-                    break;
-                }
-            }
-            if (stack)
+            if (IsMalMovable)
             {
                 for (int t = 0; t < 4; t++)
                 {
-                    MyMalList.transform.GetChild(t).GetComponent<Button>().interactable = true;
+                    MyStartMalList.transform.GetChild(t).GetComponent<Button>().interactable = true;
                 }
             }
             else
             {
                 for (int t = 0; t < 4; t++)
                 {
-                    MyMalList.transform.GetChild(t).GetComponent<Button>().interactable = false;
+                    MyStartMalList.transform.GetChild(t).GetComponent<Button>().interactable = false;
+                }
+                for (int k = 0; k < 6; k++)
+                {
+                    MyYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                    MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text = "0";
+                }                
+            }
+            if (rolled_yut == 3 || rolled_yut == 4) //À· ¸ð
+            {                
+                IsRollable = true;
+            }
+        }
+        else
+        {
+            if(!Check_Mal_Movable(OpYutStackList, OpStartMalList))
+            {
+                for (int k = 0; k < 6; k++)
+                {
+                    OpYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                    OpYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text = "0";
                 }
             }
-            if (rolled_yut == 3 || rolled_yut == 4)
-                RollButton.interactable = true;            
         }
-        IsRolled = true;
+        IsRolling = false;
     }
+
+
+
     public void MyStartMalClick()
     {
-        MyClickedStartMal = EventSystem.current.currentSelectedGameObject;
-        IsMyMalClicked = !IsMyMalClicked;
-        if (IsMyMalClicked)
+        
+        MyClickedMovableMal = EventSystem.current.currentSelectedGameObject;
+        IsMyStartMalClicked = !IsMyStartMalClicked;
+        IsMyMovedMalClicked = false;
+        if (IsMyStartMalClicked)
         {
+            turn_on_off_all_caan(false);
+            turn_on_off_all_moved_mal(false);
             for (int k = 0; k < 5; k++)
             {
                 int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
@@ -241,138 +280,353 @@ public class InGame        : MonoBehaviourPunCallbacks
                     Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = true;
                     Caan.transform.GetChild(k + 1).GetChild(0).GetComponent<Image>().color = YutColor[k];
                     Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                    Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).name = (k + 1).ToString();
                     Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(true);
+                }
+            }
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (MalBox.transform.GetChild(k).name[0] == 'M')
+                    MalBox.transform.GetChild(k).GetComponent<BoxCollider2D>().enabled = false;
+            }
+        }
+        else
+        {
+            turn_on_off_all_caan(false);
+            turn_on_off_all_moved_mal(true);
+        }
+    }
+
+    public void MovedMalClick(GameObject clicked_moved_mal)
+    {
+        IsMyMovedMalClicked = !IsMyMovedMalClicked;
+        IsMyStartMalClicked = false;
+        MyClickedMovableMal = clicked_moved_mal;
+
+        if (IsMyMovedMalClicked)
+        {
+            turn_on_off_all_caan(false);
+            turn_on_off_all_moved_mal(false);
+            clicked_moved_mal.GetComponent<BoxCollider2D>().enabled = true;
+
+            int clicked_mal_pos = int.Parse(clicked_moved_mal.transform.GetChild(2).name);
+            int end = 0;
+            for (int k = 0; k < 5; k++)
+            {
+                int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
+                if (yut > 0)
+                {
+                    if (clicked_mal_pos + k + 1 > 20)
+                    {
+                        Caan.transform.GetChild(0).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(0).GetChild(0).GetComponent<Image>().color = YutColor[7];
+                        Caan.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
+                        Caan.transform.GetChild(0).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+                    }                   
+                    else {
+                        if (clicked_mal_pos + k + 1 == 20)
+                            end = -(clicked_mal_pos + k + 1);
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).gameObject.SetActive(true);
+                    }
                 }
             }
         }
         else
         {
-            for (int k = 0; k < 5; k++)
-            {
-                Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = false;
-                Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(false);
-            }
+            turn_on_off_all_caan(false);
+            turn_on_off_all_moved_mal(true);
         }
     }
 
     public void CaanClick()
     {
+        if (EventSystem.current.currentSelectedGameObject == null)
+            return;
         GameObject current_clicked_caan = EventSystem.current.currentSelectedGameObject;
+        print(current_clicked_caan.name);
         int clicked_caan_num = int.Parse(current_clicked_caan.name);
-        if (IsMyMalClicked)
+        int moving_yut = int.Parse(current_clicked_caan.transform.GetChild(0).GetChild(0).name);
+        if (IsMyStartMalClicked)
         {
-            int my_clicked_start_mal_num = MyClickedStartMal.name[4] - '1';
+            turn_on_off_all_caan(false);
+            int my_clicked_start_mal_num = MyClickedMovableMal.name[4] - '1';
             MyMalPosition[my_clicked_start_mal_num] = clicked_caan_num;
-            MyClickedStartMal.SetActive(false);
-            PV.RPC("moving_mal", RpcTarget.All, my_clicked_start_mal_num, clicked_caan_num);
+            
 
-            for (int k = 0; k < 5; k++)
-            {
-                Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = false;
-                Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(false);
-            }
-            IsMyMalClicked = false;
+            PV.RPC("moving_start_mal", RpcTarget.All, my_clicked_start_mal_num, clicked_caan_num, moving_yut);            
+            IsMyStartMalClicked = false;
+        }
+        if (IsMyMovedMalClicked)
+        {
+            turn_on_off_all_caan(false);
+
+            int clicked_mal_pos = int.Parse(MyClickedMovableMal.transform.GetChild(2).name);            
+            PV.RPC("moving_moved_mal", RpcTarget.All, clicked_mal_pos, clicked_caan_num, moving_yut);            
+            IsMyMovedMalClicked = false;
         }
     }
 
     [PunRPC]
-    void moving_mal(int clicked_start_mal_num, int clicked_caan_num)
+    void moving_start_mal(int clicked_start_mal_num, int clicked_caan_num, int moving_yut)
     {
-        print("rpc");
         IsMoving = true;
         GameObject moving_mal;        
         GameObject current_clicked_caan = Caan.transform.GetChild(clicked_caan_num).gameObject;
         if (MyTurn)
         {
-            GameObject current_clicked_mal = MyMalList.transform.GetChild(clicked_start_mal_num).gameObject;
+            GameObject current_clicked_mal = MyStartMalList.transform.GetChild(clicked_start_mal_num).gameObject;
             current_clicked_mal.SetActive(false);
             moving_mal = Instantiate(MyMovingMal);
             int yut_stack = int.Parse(MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text);
             MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
-            if(yut_stack-1 == 0)
+            if (yut_stack - 1 == 0)
             {
-                MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(200 / 255f, 200 / 255f, 200 / 255f, 128 / 255f);
-            }
+                MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+            }      
         }
         else
         {
-            GameObject current_clicked_mal = OpMalList.transform.GetChild(clicked_start_mal_num).gameObject;
+            GameObject current_clicked_mal = OpStartMalList.transform.GetChild(clicked_start_mal_num).gameObject;
             current_clicked_mal.SetActive(false);
             moving_mal = Instantiate(OpMovingMal);
             int yut_stack = int.Parse(OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text);
             OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
             if (yut_stack - 1 == 0)
             {
-                OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(200 / 255f, 200 / 255f, 200 / 255f, 128 / 255f);
+                OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             }
         }
         moving_mal.transform.SetParent(MalBox.transform);
         moving_mal.transform.position = Caan.transform.GetChild(0).position;
+        moving_mal.transform.GetChild(1).GetComponent<TMP_Text>().text = "1";
+        moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = clicked_caan_num.ToString();
+        moving_mal.transform.GetChild(2).name = clicked_caan_num.ToString();
+        moving_mal.name += clicked_start_mal_num.ToString();
         moving_mal.SetActive(true);
 
-        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan.transform.position));
+        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan.transform.position + new Vector3(0f, 0.15f), moving_yut));        
     }
 
-    /*    IEnumerator MoveMotion(GameObject moving_mal, Vector3 des)
-        {
-            while (true)
-            {
-                Vector3.MoveTowards(moving_mal.transform.position, des, 1);
-                if (Vector3.Magnitude(moving_mal.transform.position - des) < 0.01f)
-                    break;
-                yield return null;
-            }
-            moving_mal.transform.position = des;
-            IsMoving = false;        
-
-        }
-    */
-    IEnumerator MoveMotion(GameObject moving_mal, Vector3 des)
+    [PunRPC]
+    void moving_moved_mal(int clicked_moved_mal_num, int clicked_caan_num, int moving_yut)
     {
-        float count = 0;
-        Vector3 ori_pos = moving_mal.transform.position;
+        IsMoving = true;
+        GameObject moving_mal = null;
+        GameObject current_clicked_caan = Caan.transform.GetChild(clicked_caan_num).gameObject;        
+        if (MyTurn)
+        {
+            for(int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (int.Parse(MalBox.transform.GetChild(k).GetChild(2).name) == clicked_moved_mal_num && MalBox.transform.GetChild(k).name[0] == 'M')
+                    moving_mal = MalBox.transform.GetChild(k).gameObject;
+            }
+            int yut_stack = int.Parse(MyYutStackList.transform.GetChild(moving_yut-1).GetChild(2).GetComponent<TMP_Text>().text);
+            MyYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            if (yut_stack - 1 == 0)
+            {
+                MyYutStackList.transform.GetChild(moving_yut - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+            }
+        }
+        else
+        {
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (int.Parse(MalBox.transform.GetChild(k).GetChild(2).name) == clicked_moved_mal_num && MalBox.transform.GetChild(k).name[0] == 'O')
+                    moving_mal = MalBox.transform.GetChild(k).gameObject;
+            }
+            int yut_stack = int.Parse(OpYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text);
+            OpYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            if (yut_stack - 1 == 0)
+            {
+                OpYutStackList.transform.GetChild(moving_yut - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+            }
+        }
+
+        
+        moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = (int.Parse(moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text) + moving_yut).ToString();
+        moving_mal.transform.GetChild(2).name = moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text;
+
+    
+        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan.transform.position + new Vector3(0f, 0.15f), moving_yut));
+
+
+    }
+    IEnumerator MoveMotion(GameObject moving_mal, Vector3 des, int moving_cnt)
+    {
         while (true)
         {
-            count += Time.deltaTime;
-            moving_mal.transform.position = Vector3.Lerp(ori_pos, des, count);
-            if (count >= 1)
+            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des, MoveSpeed * Time.deltaTime * moving_cnt);
+            if (Vector3.Magnitude(moving_mal.transform.position - des) < 0.0001f)
             {
                 moving_mal.transform.position = des;
+                action_moving_result(moving_mal, moving_cnt);
                 break;
             }
             yield return null;
         }
+    }
+    void action_moving_result(GameObject moved_mal, int moving_yut) { 
+        List<GameObject> destroy_list = new List<GameObject>();
+        string moved_mal_pos = moved_mal.transform.GetChild(2).GetComponent<TMP_Text>().text;
+        int moved_mal_cnt = int.Parse(moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
+
+        if (int.Parse(moved_mal_pos) > 20)
+        {
+            int goal_cnt = 0;
+            int to_goal = int.Parse(moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
+            if (MyTurn)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    if (!MyStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                    {
+                        MyStartMalList.transform.GetChild(k + 4).gameObject.SetActive(true);                        
+                        goal_cnt++;
+                    }
+                    if (goal_cnt == to_goal)
+                        break;
+                }
+                goal_cnt = 0;
+                for (int k = 4; k < 8; k++)
+                {
+                    if (MyStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                        goal_cnt++;
+                    if(goal_cnt == 4)
+                    {
+                        GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "½Â¸®!!";
+                        GameEnd.SetActive(true);
+                    }
+                }
+            }
+            else
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    if (!OpStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                    {
+                        OpStartMalList.transform.GetChild(k + 4).gameObject.SetActive(true);                        
+                        goal_cnt++;
+                    }
+                    if (goal_cnt == to_goal)
+                        break;
+                }
+                goal_cnt = 0;
+                for (int k = 4; k < 8; k++)
+                {
+                    if (OpStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                        goal_cnt++;
+                    if (goal_cnt == 4)
+                    {
+                        GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "ÆÐ¹è ¤Ì¤Ì";
+                        GameEnd.SetActive(true);
+                    }
+                }
+            }
+            Destroy(moved_mal);
+            turn_on_off_all_moved_mal(true);
+            IsMoving = false;
+            return;
+        }
+
+
+        for (int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            string current_mal_pos = MalBox.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text;
+            string current_mal_name = MalBox.transform.GetChild(k).name;
+            int current_mal_cnt = int.Parse(MalBox.transform.GetChild(k).GetChild(1).GetComponent<TMP_Text>().text);
+            if (current_mal_pos == moved_mal_pos && MalBox.transform.GetChild(k).gameObject != moved_mal)
+            {
+                if (current_mal_name[0] == moved_mal.name[0]) { //°°Àº »ç¶÷ ¸»
+                    moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text = (moved_mal_cnt + current_mal_cnt).ToString();
+                    destroy_list.Add(MalBox.transform.GetChild(k).gameObject);
+                }
+                else // ´Ù¸¥ »ç¶÷ ¸»À» ÀâÀ½
+                { 
+                    destroy_list.Add(MalBox.transform.GetChild(k).gameObject);
+                    int catched_mal_cnt = int.Parse(MalBox.transform.GetChild(k).GetChild(1).GetComponent<TMP_Text>().text);
+                    int return_cnt = 0;                    
+                    for (int t = 0; t < 4; t++)
+                    {
+                        if (MyTurn) // ³»°¡ »ó´ë¸» ÀâÀ½
+                        {
+                            if (!OpStartMalList.transform.GetChild(t).gameObject.activeSelf)
+                            {
+                                OpStartMalList.transform.GetChild(t).gameObject.SetActive(true);
+                                return_cnt++;
+                            }
+                            if(moving_yut != 4 && moving_yut != 5)//À·ÀÌ³ª ¸ð·Î ÀâÀº°Å ¾Æ´Ï¸é
+                                IsRollable = true; // ÇÑ¹ø ´õ ±¼¸²
+                        }
+                        else // »ó´ë°¡ ³»¸» ÀâÀ½
+                        {                            
+                            if (!MyStartMalList.transform.GetChild(t).gameObject.activeSelf)
+                            {
+                                MyStartMalList.transform.GetChild(t).gameObject.SetActive(true);
+                                return_cnt++;
+                            }
+                        }
+                        if (return_cnt == catched_mal_cnt)
+                            break;
+                    }                    
+                }
+            }
+        }
+        for(int k = 0; k< destroy_list.Count; k++)
+        {
+            Destroy(destroy_list[k]);
+        }
+        if (int.Parse(moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text) > 1)
+        {
+            moved_mal.transform.GetChild(0).gameObject.SetActive(true);
+            moved_mal.transform.GetChild(1).gameObject.SetActive(true);            
+        }
+        else
+        {
+            moved_mal.transform.GetChild(0).gameObject.SetActive(false);
+            moved_mal.transform.GetChild(1).gameObject.SetActive(false);
+        }
+        turn_on_off_all_moved_mal(true);
         IsMoving = false;
     }
 
 
-    bool IsStackEmpty(GameObject StackList)
+
+    bool Check_Mal_Movable(GameObject YutStackList, GameObject StartMalList)
     {
         for(int k = 0; k< 5; k++)
         {
-            if (int.Parse(StackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text) > 0)
-                return false;
+            if (int.Parse(YutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+                return true;
         }
-        if (int.Parse(StackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+        if (int.Parse(YutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
         {
-
+            if (Check_Mal_Moved(StartMalList))
+            {
+                return true;
+            }
         }
-        return true;
+        return false;
     }
-
-    bool IsMalMoved(GameObject StackList)
+    bool Check_Mal_Moved(GameObject StartMalList)
     {
         for (int k = 0; k < 4; k++)
         {
-            if (!StackList.transform.GetChild(k).gameObject.activeSelf)
+            if (!StartMalList.transform.GetChild(k).gameObject.activeSelf)
                 return true;
         }
         return false;
     }
 
+
+
     public void EndGameButtonClick()
     {
-        PV.RPC("end_game", RpcTarget.All);
+        end_game();        
     }
 
     public void StartButtonClick()
@@ -388,12 +642,12 @@ public class InGame        : MonoBehaviourPunCallbacks
     {
         print("Prepare Game");
         MyName = MyInfoList.transform.GetChild(1).GetComponent<TMP_Text>();
-        MyMalList = MyInfoList.transform.GetChild(2).gameObject;
+        MyStartMalList = MyInfoList.transform.GetChild(2).gameObject;
         MyEspList = MyInfoList.transform.GetChild(3).gameObject;
         MyYutStackList = MyInfoList.transform.GetChild(4).gameObject;
 
         OpName = OpInfoList.transform.GetChild(1).GetComponent<TMP_Text>();
-        OpMalList = OpInfoList.transform.GetChild(2).gameObject;
+        OpStartMalList = OpInfoList.transform.GetChild(2).gameObject;
         OpEspList = OpInfoList.transform.GetChild(3).gameObject;
         OpYutStackList = OpInfoList.transform.GetChild(4).gameObject;
 
@@ -410,14 +664,24 @@ public class InGame        : MonoBehaviourPunCallbacks
                 master_mal = Random.Range(0, 7);
             PV.RPC("set_turn_and_character", RpcTarget.All, turn, master_mal, slave__mal);
         }
-
-
-        
         Clear();
+    }
+
+
+    [PunRPC]
+    void change_turn()
+    {
+        if (Master.transform.childCount == 1)
+            Baton.transform.SetParent(Slave.transform);
+        else if (Slave.transform.childCount == 1)
+            Baton.transform.SetParent(Master.transform);
+        IsRollable = true;
+        MyTurn = true;
     }
     [PunRPC]
     void set_turn_and_character(int turn, int master_mal, int slave_mal)
     {
+        print("setting");
         if (turn == 0)
             Baton.transform.SetParent(Master.transform);
         else
@@ -435,11 +699,14 @@ public class InGame        : MonoBehaviourPunCallbacks
         }
         for (int k = 0; k < 4; k++)
         {
-            MyMalList.transform.GetChild(k).GetComponent<Image>().sprite = MyMalImage;
-            MyMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
-            MyMalList.transform.GetChild(k).GetChild(0).gameObject.SetActive(false);
-            OpMalList.transform.GetChild(k).GetComponent<Image>().sprite = OpMalImage;
-            OpMalList.transform.GetChild(k).GetChild(0).gameObject.SetActive(false);
+            MyStartMalList.transform.GetChild(k).GetComponent<Image>().sprite = MyMalImage;
+            MyStartMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;            
+            OpStartMalList.transform.GetChild(k).GetComponent<Image>().sprite = OpMalImage;            
+        }
+        for (int k = 4; k < 8; k++)
+        {
+            MyStartMalList.transform.GetChild(k).GetComponent<Image>().sprite = MyMalImage;            
+            OpStartMalList.transform.GetChild(k).GetComponent<Image>().sprite = OpMalImage;
         }
         MyMovingMal.GetComponent<SpriteRenderer>().sprite = MyMalImage;
         OpMovingMal.GetComponent<SpriteRenderer>().sprite = OpMalImage;
@@ -450,30 +717,59 @@ public class InGame        : MonoBehaviourPunCallbacks
         for (int k = 0; k < 6; k++)
         {
             MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text = (0).ToString();
-            MyYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(200 / 255f, 200 / 255f, 200 / 255f, 128 / 255f);
+            MyYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             OpYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text = (0).ToString();
-            OpYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(200 / 255f, 200 / 255f, 200 / 255f, 128 / 255f);
+            OpYutStackList.transform.GetChild(k).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
         }
         for (int k = 0; k < 4; k++)
         {
-            MyMalList.transform.GetChild(k).gameObject.SetActive(true);
-            MyMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
-            MyMalList.transform.GetChild(k).GetChild(0).gameObject.SetActive(false);
-            OpMalList.transform.GetChild(k).gameObject.SetActive(true);
-            OpMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
-            OpMalList.transform.GetChild(k).GetChild(0).gameObject.SetActive(false);
+            MyStartMalList.transform.GetChild(k).gameObject.SetActive(true);
+            MyStartMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
+            OpStartMalList.transform.GetChild(k).gameObject.SetActive(true);
+            OpStartMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
+        }
+        for (int k = 4; k < 8; k++)
+        {
+            MyStartMalList.transform.GetChild(k).gameObject.SetActive(false);
+            OpStartMalList.transform.GetChild(k).gameObject.SetActive(false);
+        }
+        GameEnd.SetActive(false);
+        IsRolling = false;
+        IsMoving = false;
+        IsRollable = false;
+        IsMalMovable = false;
+
+        for (int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            Destroy(MalBox.transform.GetChild(k).gameObject);
+        }
+
+    }
+
+
+    void turn_on_off_all_caan(bool turn)
+    {
+        for (int k = 0; k < 29; k++)
+        {
+            Caan.transform.GetChild(k).GetComponent<Button>().interactable = turn;
+            Caan.transform.GetChild(k).GetChild(0).gameObject.SetActive(turn);
         }
     }
-    [PunRPC]
+
+    void turn_on_off_all_moved_mal(bool turn)
+    {
+        for (int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            if (MalBox.transform.GetChild(k).name[0] == 'M')
+                MalBox.transform.GetChild(k).GetComponent<BoxCollider2D>().enabled = turn;
+        }
+    }
+
     void end_game()
     {
         WaitCanvas.SetActive(true);
         GameCanvas.SetActive(false);
-        IsRolling = false;
-        for(int k = 2; k < MalBox.transform.childCount; k++)
-        {
-            Destroy(MalBox.transform.GetChild(k).gameObject);
-        }
-    }
-
+        
+        Clear();
+    }    
 }

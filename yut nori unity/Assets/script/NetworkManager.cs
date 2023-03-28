@@ -213,7 +213,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        print("room list updated");
+        //print("room list updated");
         UpdateRoomList(roomList);        
     }
     
@@ -224,7 +224,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             Destroy(RoomList.transform.GetChild(k).gameObject);
         }
-        print(roomList.Count);
+        //print(roomList.Count);
         for (int k = 0; k < roomList.Count; k++)
         {
             if (roomList[k].RemovedFromList) continue;
@@ -281,8 +281,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     [PunRPC]
     void send_message(string msg)
-    {
-        print("chatchatchat");
+    {        
         TMP_Text chat = Instantiate(ChatLog);
         chat.text = msg;
         if(ChatLogList.transform.childCount == MaxChatLog)
