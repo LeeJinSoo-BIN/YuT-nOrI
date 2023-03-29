@@ -270,6 +270,7 @@ public class InGame : MonoBehaviourPunCallbacks
         IsMyMovedMalClicked = false;
         if (IsMyStartMalClicked)
         {
+            MyClickedMovableMal = EventSystem.current.currentSelectedGameObject;
             turn_on_off_all_caan(false);
             turn_on_off_all_moved_mal(false);
             for (int k = 0; k < 5; k++)
@@ -310,28 +311,58 @@ public class InGame : MonoBehaviourPunCallbacks
             clicked_moved_mal.GetComponent<BoxCollider2D>().enabled = true;
 
             int clicked_mal_pos = int.Parse(clicked_moved_mal.transform.GetChild(2).name);
-            int end = 0;
+            int adj = 0;
             for (int k = 0; k < 5; k++)
             {
                 int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
                 if (yut > 0)
                 {
-                    if (clicked_mal_pos + k + 1 > 20)
+                    if ((((clicked_mal_pos + k + 1 > 30) && (clicked_mal_pos > 25 || clicked_mal_pos == 22)) || clicked_mal_pos == 0) ||
+                        ((clicked_mal_pos + k + 1 > 20) && (clicked_mal_pos) < 20)) 
                     {
-                        Caan.transform.GetChild(0).GetComponent<Button>().interactable = true;
-                        Caan.transform.GetChild(0).GetChild(0).GetComponent<Image>().color = YutColor[7];
-                        Caan.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
-                        Caan.transform.GetChild(0).GetChild(0).GetChild(0).name = (k + 1).ToString();
-                        Caan.transform.GetChild(0).GetChild(0).gameObject.SetActive(true);
-                    }                   
+                        Caan.transform.GetChild(30).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(30).GetChild(0).GetComponent<Image>().color = YutColor[7];
+                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
+                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(30).GetChild(0).gameObject.SetActive(true);
+                        Caan.transform.GetChild(0).gameObject.SetActive(false);
+                        Caan.transform.GetChild(30).gameObject.SetActive(true);
+                    }
                     else {
-                        if (clicked_mal_pos + k + 1 == 20)
-                            end = -(clicked_mal_pos + k + 1);
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetComponent<Button>().interactable = true;
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetComponent<Image>().color = YutColor[k];
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).GetChild(0).name = (k + 1).ToString();
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + end).GetChild(0).gameObject.SetActive(true);
+                        if ((clicked_mal_pos + k + 1 == 20) && clicked_mal_pos < 20 || (clicked_mal_pos + k + 1 == 30))
+                        {
+                            adj = -(clicked_mal_pos + k + 1);
+                            Caan.transform.GetChild(0).gameObject.SetActive(true);
+                            Caan.transform.GetChild(30).gameObject.SetActive(false);
+                        }
+                        else if (clicked_mal_pos == 22)
+                            adj = 5;
+                        else if (clicked_mal_pos == 5 || clicked_mal_pos == 10)
+                        {
+                            adj = 14;
+
+                        }
+                        if ((20 <= clicked_mal_pos && clicked_mal_pos <= 23) || clicked_mal_pos == 5)
+                        {
+                            Caan.transform.GetChild(22).gameObject.SetActive(true);
+                            Caan.transform.GetChild(27).gameObject.SetActive(false);
+
+                        }
+                        else if ((25 <= clicked_mal_pos && clicked_mal_pos <= 28) || clicked_mal_pos == 10)
+                        {
+                            Caan.transform.GetChild(22).gameObject.SetActive(false);
+                            Caan.transform.GetChild(27).gameObject.SetActive(true);
+
+                        }
+                        if (clicked_mal_pos + k + 1 + adj >= 25 && (20<=clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
+                        {
+                            adj = -10;
+                        }
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).gameObject.SetActive(true);
                     }
                 }
             }
@@ -367,7 +398,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
             int clicked_mal_pos = int.Parse(MyClickedMovableMal.transform.GetChild(2).name);            
             PV.RPC("moving_moved_mal", RpcTarget.All, clicked_mal_pos, clicked_caan_num, moving_yut);            
-            IsMyMovedMalClicked = false;
+            IsMyMovedMalClicked = false;            
         }
     }
 
@@ -447,8 +478,8 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
 
-        
-        moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = (int.Parse(moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text) + moving_yut).ToString();
+
+        moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = (int.Parse(current_clicked_caan.name)).ToString();
         moving_mal.transform.GetChild(2).name = moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text;
 
     
@@ -475,15 +506,15 @@ public class InGame : MonoBehaviourPunCallbacks
         string moved_mal_pos = moved_mal.transform.GetChild(2).GetComponent<TMP_Text>().text;
         int moved_mal_cnt = int.Parse(moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
 
-        if (int.Parse(moved_mal_pos) > 20)
+        if (int.Parse(moved_mal_pos) >= 30)
         {
             int goal_cnt = 0;
-            int to_goal = int.Parse(moved_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
+            int to_goal = moved_mal_cnt;
             if (MyTurn)
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    if (!MyStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                    if (!MyStartMalList.transform.GetChild(k).gameObject.activeSelf && !MyStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
                     {
                         MyStartMalList.transform.GetChild(k + 4).gameObject.SetActive(true);                        
                         goal_cnt++;
@@ -498,6 +529,10 @@ public class InGame : MonoBehaviourPunCallbacks
                         goal_cnt++;
                     if(goal_cnt == 4)
                     {
+                        for(int t = 2; t < MalBox.transform.childCount; t++)
+                        {
+                            Destroy(MalBox.transform.GetChild(t).gameObject);
+                        }
                         GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "½Â¸®!!";
                         GameEnd.SetActive(true);
                     }
@@ -507,7 +542,7 @@ public class InGame : MonoBehaviourPunCallbacks
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    if (!OpStartMalList.transform.GetChild(k).gameObject.activeSelf)
+                    if (!OpStartMalList.transform.GetChild(k).gameObject.activeSelf && !OpStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
                     {
                         OpStartMalList.transform.GetChild(k + 4).gameObject.SetActive(true);                        
                         goal_cnt++;
@@ -522,6 +557,10 @@ public class InGame : MonoBehaviourPunCallbacks
                         goal_cnt++;
                     if (goal_cnt == 4)
                     {
+                        for (int t = 2; t < MalBox.transform.childCount; t++)
+                        {
+                            Destroy(MalBox.transform.GetChild(t).gameObject);
+                        }
                         GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "ÆÐ¹è ¤Ì¤Ì";
                         GameEnd.SetActive(true);
                     }
@@ -749,7 +788,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
     void turn_on_off_all_caan(bool turn)
     {
-        for (int k = 0; k < 29; k++)
+        for (int k = 0; k <= 30; k++)
         {
             Caan.transform.GetChild(k).GetComponent<Button>().interactable = turn;
             Caan.transform.GetChild(k).GetChild(0).gameObject.SetActive(turn);
