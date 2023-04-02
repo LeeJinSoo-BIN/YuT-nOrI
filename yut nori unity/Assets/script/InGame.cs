@@ -306,6 +306,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
         if (IsMyMovedMalClicked)
         {
+            print("moved mal click" + clicked_moved_mal.name + " " + clicked_moved_mal.transform.GetChild(2).name);
             turn_on_off_all_caan(false);
             turn_on_off_all_moved_mal(false);
             clicked_moved_mal.GetComponent<BoxCollider2D>().enabled = true;
@@ -335,26 +336,17 @@ public class InGame : MonoBehaviourPunCallbacks
                             Caan.transform.GetChild(0).gameObject.SetActive(true);
                             Caan.transform.GetChild(30).gameObject.SetActive(false);
                         }
-                        else if (clicked_mal_pos == 22)
+                        else if (clicked_mal_pos + k + 1 == 22)
                             adj = 5;
                         else if (clicked_mal_pos == 5 || clicked_mal_pos == 10)
                         {
                             adj = 14;
-
+                            if(clicked_mal_pos + k + 1 + adj == 22)
+                            {
+                                adj = 19;
+                            }
                         }
-                        if ((20 <= clicked_mal_pos && clicked_mal_pos <= 23) || clicked_mal_pos == 5)
-                        {
-                            Caan.transform.GetChild(22).gameObject.SetActive(true);
-                            Caan.transform.GetChild(27).gameObject.SetActive(false);
-
-                        }
-                        else if ((25 <= clicked_mal_pos && clicked_mal_pos <= 28) || clicked_mal_pos == 10)
-                        {
-                            Caan.transform.GetChild(22).gameObject.SetActive(false);
-                            Caan.transform.GetChild(27).gameObject.SetActive(true);
-
-                        }
-                        if (clicked_mal_pos + k + 1 + adj >= 25 && (20<=clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
+                        else if (clicked_mal_pos + k + 1 + adj >= 25 && (20<=clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
                         {
                             adj = -10;
                         }
@@ -510,7 +502,7 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             int goal_cnt = 0;
             int to_goal = moved_mal_cnt;
-            if (MyTurn)
+            if (moved_mal.name[0] == 'M')
             {
                 for (int k = 0; k < 4; k++)
                 {
@@ -593,7 +585,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     {
                         if (MyTurn) // 내가 상대말 잡음
                         {
-                            if (!OpStartMalList.transform.GetChild(t).gameObject.activeSelf)
+                            if (!OpStartMalList.transform.GetChild(t).gameObject.activeSelf && !OpStartMalList.transform.GetChild(t + 4).gameObject.activeSelf)
                             {
                                 OpStartMalList.transform.GetChild(t).gameObject.SetActive(true);
                                 return_cnt++;
@@ -602,8 +594,8 @@ public class InGame : MonoBehaviourPunCallbacks
                                 IsRollable = true; // 한번 더 굴림
                         }
                         else // 상대가 내말 잡음
-                        {                            
-                            if (!MyStartMalList.transform.GetChild(t).gameObject.activeSelf)
+                        {
+                            if (!MyStartMalList.transform.GetChild(t).gameObject.activeSelf && !MyStartMalList.transform.GetChild(t + 4).gameObject.activeSelf)
                             {
                                 MyStartMalList.transform.GetChild(t).gameObject.SetActive(true);
                                 return_cnt++;
