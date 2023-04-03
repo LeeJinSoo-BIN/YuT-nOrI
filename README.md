@@ -3,22 +3,23 @@
 ## 초능력! 윷놀이
 
 > 프로젝트 기간: 2023.03.16 ~ ing<br>
-> 참여자 : 이진수
-
-<br>
+> 참여자 : 이진수<br>
 
 --------
 
 <br>
+<br>
 
 ### 게임 화면
-
 
 ||||
 |:---|:----|:----|
 |1. 메인<br><img src="readme img/main.png">|2. 로비<br><img src="readme img/lobby.png">|3. 방 생성<br><img src="readme img/create room.png">|
 |4. 방 참가<br><img src="readme img/join room.png">|5. 대기 방<br><img src="readme img/in room.png">|6. 게임 내<br><img src="readme img/in game.png">|
  
+ <br>
+ <br>
+
 ### 구현 목표
 
 ---
@@ -30,18 +31,20 @@
 > - [ ] BGM 및 효과음
 
 <br>
+<br>
 
 ### 초능력
 ---
 구현중
 
 <br>
-
+<br>
 
 ### 발견된 오류
 ---
 이슈 참고
 
+<br>
 <br>
 
 ### 개발 환경
