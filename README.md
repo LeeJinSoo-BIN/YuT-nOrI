@@ -14,8 +14,23 @@
 전통적인 규칙 외에 여러가지 능력을 추가하여 더욱 스릴있고 체계적인 전략을 요구한다.
 
 
+
 <br>
 <br>
+
+
+### 게임 화면
+
+||||
+|:---|:----|:----|
+|1. 메인<br><img src="readme img/main.png">|2. 로비<br><img src="readme img/lobby.png">|3. 방 생성<br><img src="readme img/create room.png">|
+|4. 방 참가<br><img src="readme img/join room.png">|5. 대기 방<br><img src="readme img/in room.png">|6. 게임 내<br><img src="readme img/in game.png">|
+ 
+ <br>
+ <br>
+
+
+
 
 ### 진행 방법
 ---
@@ -31,17 +46,6 @@
 
 <br>
 <br>
-
-
-### 게임 화면
-
-||||
-|:---|:----|:----|
-|1. 메인<br><img src="readme img/main.png">|2. 로비<br><img src="readme img/lobby.png">|3. 방 생성<br><img src="readme img/create room.png">|
-|4. 방 참가<br><img src="readme img/join room.png">|5. 대기 방<br><img src="readme img/in room.png">|6. 게임 내<br><img src="readme img/in game.png">|
- 
- <br>
- <br>
 
 ### 구현 목표
 
