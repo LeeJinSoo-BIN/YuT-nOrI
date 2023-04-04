@@ -158,7 +158,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         if (back_cnt == 1 && back_do == 1)
         {
-            CurrentYut = 1; // 뒷도
+            CurrentYut = 6; // 뒷도
         }
         else if (back_cnt == 0) 
         {
@@ -281,7 +281,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = true;
                     Caan.transform.GetChild(k + 1).GetChild(0).GetComponent<Image>().color = YutColor[k];
                     Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
-                    Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                    Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).name = (k).ToString();
                     Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(true);
                 }
             }
@@ -324,7 +324,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         Caan.transform.GetChild(30).GetComponent<Button>().interactable = true;
                         Caan.transform.GetChild(30).GetChild(0).GetComponent<Image>().color = YutColor[7];
                         Caan.transform.GetChild(30).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
-                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k).ToString();
                         Caan.transform.GetChild(30).GetChild(0).gameObject.SetActive(true);
                         Caan.transform.GetChild(0).gameObject.SetActive(false);
                         Caan.transform.GetChild(30).gameObject.SetActive(true);
@@ -353,10 +353,61 @@ public class InGame : MonoBehaviourPunCallbacks
                         Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetComponent<Button>().interactable = true;
                         Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
                         Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k + 1).ToString();
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
                         Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).gameObject.SetActive(true);
                     }
                 }
+            }            
+            if (int.Parse(MyYutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+            {
+                if (clicked_mal_pos == 1)
+                {
+                    Caan.transform.GetChild(0).gameObject.SetActive(true);
+                    Caan.transform.GetChild(30).gameObject.SetActive(false);
+                    adj = 0;
+                }
+                if (clicked_mal_pos == 0)
+                {
+                    Caan.transform.GetChild(29).GetComponent<Button>().interactable = true;
+                    Caan.transform.GetChild(29).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                    Caan.transform.GetChild(29).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                    Caan.transform.GetChild(29).GetChild(0).GetChild(0).name = (5).ToString();
+                    Caan.transform.GetChild(29).GetChild(0).gameObject.SetActive(true);
+                    adj = 20;
+                }
+                else if (clicked_mal_pos == 15)
+                {
+                    Caan.transform.GetChild(24).GetComponent<Button>().interactable = true;
+                    Caan.transform.GetChild(24).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                    Caan.transform.GetChild(24).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                    Caan.transform.GetChild(24).GetChild(0).GetChild(0).name = (5).ToString();
+                    Caan.transform.GetChild(24).GetChild(0).gameObject.SetActive(true);
+                    adj = 0;
+                }
+                else if (clicked_mal_pos == 20 || clicked_mal_pos == 25)
+                {
+                    adj = -14;
+                }
+                else if (clicked_mal_pos == 23)
+                {
+                    adj = 5;
+                }
+                else if (clicked_mal_pos == 27)
+                {
+                    Caan.transform.GetChild(21).GetComponent<Button>().interactable = true;
+                    Caan.transform.GetChild(21).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                    Caan.transform.GetChild(21).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                    Caan.transform.GetChild(21).GetChild(0).GetChild(0).name = (5).ToString();
+                    Caan.transform.GetChild(21).GetChild(0).gameObject.SetActive(true);
+                    adj = 0;
+                }
+                else
+                    adj = 0;
+                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetComponent<Button>().interactable = true;
+                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).name = (5).ToString();
+                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).gameObject.SetActive(true);
             }
         }
         else
@@ -448,11 +499,11 @@ public class InGame : MonoBehaviourPunCallbacks
                 if (int.Parse(MalBox.transform.GetChild(k).GetChild(2).name) == clicked_moved_mal_num && MalBox.transform.GetChild(k).name[0] == 'M')
                     moving_mal = MalBox.transform.GetChild(k).gameObject;
             }
-            int yut_stack = int.Parse(MyYutStackList.transform.GetChild(moving_yut-1).GetChild(2).GetComponent<TMP_Text>().text);
-            MyYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            int yut_stack = int.Parse(MyYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text);
+            MyYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
             if (yut_stack - 1 == 0)
             {
-                MyYutStackList.transform.GetChild(moving_yut - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                MyYutStackList.transform.GetChild(moving_yut).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             }
         }
         else
@@ -462,11 +513,11 @@ public class InGame : MonoBehaviourPunCallbacks
                 if (int.Parse(MalBox.transform.GetChild(k).GetChild(2).name) == clicked_moved_mal_num && MalBox.transform.GetChild(k).name[0] == 'O')
                     moving_mal = MalBox.transform.GetChild(k).gameObject;
             }
-            int yut_stack = int.Parse(OpYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text);
-            OpYutStackList.transform.GetChild(moving_yut - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            int yut_stack = int.Parse(OpYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text);
+            OpYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
             if (yut_stack - 1 == 0)
             {
-                OpYutStackList.transform.GetChild(moving_yut - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                OpYutStackList.transform.GetChild(moving_yut).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             }
         }
 
@@ -483,7 +534,7 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         while (true)
         {
-            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des, MoveSpeed * Time.deltaTime * moving_cnt);
+            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des, MoveSpeed * Time.deltaTime * 3);
             if (Vector3.Magnitude(moving_mal.transform.position - des) < 0.0001f)
             {
                 moving_mal.transform.position = des;
@@ -590,7 +641,7 @@ public class InGame : MonoBehaviourPunCallbacks
                                 OpStartMalList.transform.GetChild(t).gameObject.SetActive(true);
                                 return_cnt++;
                             }
-                            if(moving_yut != 4 && moving_yut != 5)//윷이나 모로 잡은거 아니면
+                            if(moving_yut != 3 && moving_yut != 4)//윷이나 모로 잡은거 아니면
                                 IsRollable = true; // 한번 더 굴림
                         }
                         else // 상대가 내말 잡음
