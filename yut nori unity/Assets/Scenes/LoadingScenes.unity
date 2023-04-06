@@ -13055,7 +13055,7 @@ MonoBehaviour:
   IsMalMovable: 0
   IsRolling: 0
   IsMoving: 0
-  MoveSpeed: 2
+  MoveSpeed: 3.5
   Caan: {fileID: 921485403}
   MyMovingMal: {fileID: 1250801916}
   OpMovingMal: {fileID: 1178169789}

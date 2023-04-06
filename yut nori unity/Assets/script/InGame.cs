@@ -47,7 +47,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public bool IsMalMovable = false;
     public bool IsRolling = false;
     public bool IsMoving = false;
-    public float MoveSpeed = 2f;
+    public float MoveSpeed = 3.5f;
     
 
     private bool IsMyStartMalClicked = false;
@@ -483,7 +483,7 @@ public class InGame : MonoBehaviourPunCallbacks
         moving_mal.name += clicked_start_mal_num.ToString();
         moving_mal.SetActive(true);
 
-        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan.transform.position + new Vector3(0f, 0.15f), moving_yut));        
+        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan, moving_yut));        
     }
 
     [PunRPC]
@@ -526,18 +526,48 @@ public class InGame : MonoBehaviourPunCallbacks
         moving_mal.transform.GetChild(2).name = moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text;
 
     
-        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan.transform.position + new Vector3(0f, 0.15f), moving_yut));
+        StartCoroutine(MoveMotion(moving_mal, current_clicked_caan, moving_yut));
 
 
     }
-    IEnumerator MoveMotion(GameObject moving_mal, Vector3 des, int moving_cnt)
+    Vector3 way_over(int mal_pos, int caan_pos)
     {
+        if ((1 <= mal_pos && mal_pos <= 4) && 5 < caan_pos)
+            return Caan.transform.GetChild(5).position + new Vector3(0f, 0.15f);
+        else if ((6 <= mal_pos && mal_pos <= 9) && 10 < caan_pos)
+            return Caan.transform.GetChild(10).position + new Vector3(0f, 0.15f);
+        else if ((11 <= mal_pos && mal_pos <= 14) && 15 < caan_pos)
+            return Caan.transform.GetChild(15).position + new Vector3(0f, 0.15f);
+        else if ((20 <= mal_pos && mal_pos <= 24) && 16 <= caan_pos && caan_pos<=19)
+            return Caan.transform.GetChild(15).position + new Vector3(0f, 0.15f);
+        return new Vector3(0f, 0f);
+    }
+    IEnumerator MoveMotion(GameObject moving_mal, GameObject des_caan, int moving_cnt)
+    {
+        int moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name) - (moving_cnt + 1);
+        int caan_pos = int.Parse(des_caan.name);
+        Vector3 layover_pos = way_over(moving_mal_pos, caan_pos) ;
+        if (layover_pos.magnitude != 0)
+        {
+            while (true)
+            {
+                moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, layover_pos, MoveSpeed * Time.deltaTime);
+                if (Vector3.Magnitude(moving_mal.transform.position - layover_pos) < 0.0001f)
+                {
+                    moving_mal.transform.position = layover_pos;
+                    break;
+                }
+                yield return null;
+            }
+        }
+
+        Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
         while (true)
         {
-            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des, MoveSpeed * Time.deltaTime * 3);
-            if (Vector3.Magnitude(moving_mal.transform.position - des) < 0.0001f)
+            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
+            if (Vector3.Magnitude(moving_mal.transform.position - des_pos) < 0.0001f)
             {
-                moving_mal.transform.position = des;
+                moving_mal.transform.position = des_pos;
                 action_moving_result(moving_mal, moving_cnt);
                 break;
             }
@@ -698,7 +728,7 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         for (int k = 0; k < 4; k++)
         {
-            if (!StartMalList.transform.GetChild(k).gameObject.activeSelf)
+            if (!StartMalList.transform.GetChild(k).gameObject.activeSelf && !StartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
                 return true;
         }
         return false;
