@@ -60,7 +60,8 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject MyMovingMal;
     public GameObject OpMovingMal;
     public GameObject MalBox;
-    
+    public GameObject MyTurnSign;
+    public GameObject OpTurnSign;
 
     public PhotonView PV;
     public GameObject WaitCanvas;
@@ -742,8 +743,7 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
     public void StartButtonClick()
-    {
-        
+    {        
         if (GameCanvas.activeSelf)
         {
             PV.RPC("start_game", RpcTarget.All);
@@ -753,15 +753,15 @@ public class InGame : MonoBehaviourPunCallbacks
     void start_game()
     {
         print("Prepare Game");
-        MyName = MyInfoList.transform.GetChild(1).GetComponent<TMP_Text>();
-        MyStartMalList = MyInfoList.transform.GetChild(2).gameObject;
-        MyEspList = MyInfoList.transform.GetChild(3).gameObject;
-        MyYutStackList = MyInfoList.transform.GetChild(4).gameObject;
+        MyName = MyInfoList.transform.GetChild(2).GetComponent<TMP_Text>();
+        MyStartMalList = MyInfoList.transform.GetChild(3).gameObject;
+        MyEspList = MyInfoList.transform.GetChild(4).gameObject;
+        MyYutStackList = MyInfoList.transform.GetChild(5).gameObject;
 
-        OpName = OpInfoList.transform.GetChild(1).GetComponent<TMP_Text>();
-        OpStartMalList = OpInfoList.transform.GetChild(2).gameObject;
-        OpEspList = OpInfoList.transform.GetChild(3).gameObject;
-        OpYutStackList = OpInfoList.transform.GetChild(4).gameObject;
+        OpName = OpInfoList.transform.GetChild(2).GetComponent<TMP_Text>();
+        OpStartMalList = OpInfoList.transform.GetChild(3).gameObject;
+        OpEspList = OpInfoList.transform.GetChild(4).gameObject;
+        OpYutStackList = OpInfoList.transform.GetChild(5).gameObject;
 
 
         MyName.text = PhotonNetwork.LocalPlayer.NickName;
@@ -775,6 +775,7 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             PV.RPC("set_turn_and_character", RpcTarget.All, turn, master_mal, slave__mal);
+            PV.RPC("change_turn", RpcTarget.All);
         }
         Clear();
     }
@@ -783,21 +784,57 @@ public class InGame : MonoBehaviourPunCallbacks
     [PunRPC]
     void change_turn()
     {
+        print("!!change turn!!");
         if (Master.transform.childCount == 1)
             Baton.transform.SetParent(Slave.transform);
         else if (Slave.transform.childCount == 1)
             Baton.transform.SetParent(Master.transform);
         IsRollable = true;
-        MyTurn = true;
+        if (MyTurn)
+        {
+            MyTurnSign.SetActive(false);
+            OpTurnSign.SetActive(true);
+        }
+        else
+        {
+            MyTurnSign.SetActive(true);
+            OpTurnSign.SetActive(false);
+        }
+        MyTurn = !MyTurn;
     }
     [PunRPC]
     void set_turn_and_character(int turn, int master_mal, int slave_mal)
     {
         print("setting");
         if (turn == 0)
+        {
             Baton.transform.SetParent(Master.transform);
+            if (PhotonNetwork.LocalPlayer.IsMasterClient)
+            {
+                MyTurn = true;
+                IsRollable = true;
+            }
+            else
+            {
+                MyTurn = false;
+                IsRollable = false;
+            }
+
+        }
         else
+        {
             Baton.transform.SetParent(Slave.transform);
+            if (!PhotonNetwork.LocalPlayer.IsMasterClient)
+            {
+                MyTurn = true;
+                IsRollable = true;
+            }
+            else
+            {
+                MyTurn = false;
+                IsRollable = false;
+            }
+        }
 
         if (PhotonNetwork.LocalPlayer.IsMasterClient)
         {
