@@ -163,7 +163,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         else if (back_cnt == 0) 
         {
-            CurrentYut = 6; // ¸ð
+            CurrentYut = 5; // ¸ð
         }
         else
         {
@@ -589,7 +589,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
 
         Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
-        des_pos.z = 0f;
+        des_pos.z = 1f;
         while (true)
         {
             moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
@@ -866,7 +866,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         MyMovingMal.GetComponent<SpriteRenderer>().sprite = MyMalImage;
         OpMovingMal.GetComponent<SpriteRenderer>().sprite = OpMalImage;
-        PopTurn.transform.GetChild(0).GetComponent<Image>().sprite = MyMalImage;        
+        PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;        
     }
 
     [PunRPC]
@@ -889,8 +889,8 @@ public class InGame : MonoBehaviourPunCallbacks
 
     IEnumerator show_turn()
     {
-        PopTurn.transform.GetChild(0).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-        PopTurn.transform.GetChild(1).GetComponent<Image>().color = new Color(253/255f, 246/255f, 187/255f, 1f);
+        PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
+        PopTurn.transform.GetChild(1).GetComponent<SpriteRenderer>().color = new Color(253/255f, 246/255f, 187/255f, 1f);
         PopTurn.SetActive(true);
         float turn_show_time = 0;
         while (true)
@@ -905,15 +905,17 @@ public class InGame : MonoBehaviourPunCallbacks
 
         while (true)
         {            
-            if (PopTurn.transform.GetChild(0).GetComponent<Image>().color.a <= 0)
+            if (PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color.a <= 0)
             {                
                 PopTurn.SetActive(false);
                 break;
             }
-            PopTurn.transform.GetChild(0).GetComponent<Image>().color =
-                new Color(1f, 1f, 1f, PopTurn.transform.GetChild(0).GetComponent<Image>().color.a - VenishPopSpeed * Time.deltaTime);
-            PopTurn.transform.GetChild(1).GetComponent<Image>().color =
-                new Color(253 / 255f, 246 / 255f, 187 / 255f, PopTurn.transform.GetChild(0).GetComponent<Image>().color.a - VenishPopSpeed * Time.deltaTime);
+            PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color =
+                new Color(1f, 1f, 1f, 
+                PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color.a - VenishPopSpeed * Time.deltaTime);
+            PopTurn.transform.GetChild(1).GetComponent<SpriteRenderer>().color =
+                new Color(253 / 255f, 246 / 255f, 187 / 255f, 
+                PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color.a - VenishPopSpeed * Time.deltaTime);
             yield return null;
         }
     }

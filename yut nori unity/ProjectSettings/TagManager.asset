@@ -14,7 +14,7 @@ TagManager:
   - Text
   - 
   - OverUI
-  - OverOverUI
+  - 
   - 
   - 
   - 
@@ -40,10 +40,4 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
-    locked: 0
-  - name: OverUI
-    uniqueID: 2310814653
-    locked: 0
-  - name: OverOverUI
-    uniqueID: 3487057559
     locked: 0
