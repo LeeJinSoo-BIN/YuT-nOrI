@@ -42,6 +42,8 @@ public class InGame : MonoBehaviourPunCallbacks
     //private float FrontProbability = 58f;
     public int CurrentYut;
     public bool MyTurn = false;
+    public float RollingTime = 1f;
+    public float RollingResultTime = 1f;
 
     public bool IsRollable = false;    
     public bool IsMalMovable = false;
@@ -63,16 +65,29 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject MyTurnSign;
     public GameObject OpTurnSign;
 
+    public TMP_InputField InGameChatInputField;
+    public GameObject MyChatBubbleBox;
+    public GameObject OpChatBubbleBox;
+    public GameObject MyChatBubble;
+    public GameObject OpChatBubble;
+    public float BubbleSpeed = 10f;
+    public float BubbleTime = 2f;
+
+    public GameObject PopTurn;
+    public float ShowPopTime = 3f;
+    public float VenishPopSpeed = 3f;
+
     public PhotonView PV;
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
-
+    
 
     public GameObject Baton;
     public GameObject Master;
     public GameObject Slave;
     public GameObject Wait;
     public GameObject GameEnd;
+
 
     void Awake()
     {
@@ -82,11 +97,10 @@ public class InGame : MonoBehaviourPunCallbacks
     // Update is called once per frame
     void Update()
     {
-
         if (MyTurn)
         {
             IsMalMovable = Check_Mal_Movable(MyYutStackList, MyStartMalList);
-            if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving)
+            if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving && MyTurn)
             {
                 PV.RPC("change_turn", RpcTarget.All);
             }
@@ -111,30 +125,16 @@ public class InGame : MonoBehaviourPunCallbacks
             IsRollable = false;
             IsMalMovable = false;
         }
-
         RollButton.interactable = (IsRollable && !IsMoving && !IsRolling);
 
-
-        if (PhotonNetwork.LocalPlayer.IsMasterClient)
+        if (InGameChatInputField.text.Length > 0 &&
+          (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (Baton.transform.parent.name == "Master")
-                MyTurn = true;
-            else
-                MyTurn = false;
-        }
-        else if (!PhotonNetwork.LocalPlayer.IsMasterClient)
-        {
-            if (Baton.transform.parent.name == "Slave")
-                MyTurn = true;
-            else
-                MyTurn = false;
-        }
-        else
-        {
-            MyTurn = false;
+            PV.RPC("send_message_in_game", RpcTarget.All, PhotonNetwork.LocalPlayer.NickName, InGameChatInputField.text);
+            InGameChatInputField.text = "";
+            InGameChatInputField.ActivateInputField();
         }
 
-      
 
     }
 
@@ -163,7 +163,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         else if (back_cnt == 0) 
         {
-            CurrentYut = 5; // ¸ð
+            CurrentYut = 6; // ¸ð
         }
         else
         {
@@ -179,24 +179,50 @@ public class InGame : MonoBehaviourPunCallbacks
         RollingYut.SetActive(true);
         IsRolling = true;
         IsRollable = false;
-        RollingYut.transform.GetChild(1).GetComponent<Image>().sprite = YutGarak[7];
+
+        RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = YutGarak[7];
         RollingYut.transform.GetChild(2).gameObject.SetActive(false);
         RollingYut.transform.GetChild(3).gameObject.SetActive(false);        
         CurrentYut = rolled_yut;
-        
 
-        Invoke("show_rolled_yut_and_stack_up", 1f);
-        Invoke("action_rolling_result", 2f);
+
+        StartCoroutine(show_rolling());
     }
     
+    IEnumerator show_rolling()
+    {
+        float timer = 0;
+        while (true)
+        {
+            timer += Time.deltaTime;
+            if(timer >= RollingTime)
+            {
+                break;
+            }
+            yield return null;
+        }
+        show_rolled_yut_and_stack_up();
+        timer = 0;
+        while (true)
+        {
+            timer += Time.deltaTime;
+            if (timer >= RollingResultTime)
+            {
+                break;
+            }
+            yield return null;
+        }
+        action_rolling_result();
+    }
+
     void show_rolled_yut_and_stack_up()
     {
         int rolled_yut = CurrentYut;
         RollingYut.transform.GetChild(2).gameObject.SetActive(true);
         RollingYut.transform.GetChild(3).gameObject.SetActive(true);
 
-        RollingYut.transform.GetChild(1).GetComponent<Image>().sprite = YutGarak[rolled_yut];
-        RollingYut.transform.GetChild(2).GetComponent<Image>().sprite = YutAnimal[rolled_yut];
+        RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = YutGarak[rolled_yut];
+        RollingYut.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = YutAnimal[rolled_yut];
         RollingYut.transform.GetChild(3).GetComponent<TMP_Text>().text = YutHanguel[rolled_yut];
 
         if (rolled_yut != 6) // ³«
@@ -563,6 +589,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
 
         Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
+        des_pos.z = 0f;
         while (true)
         {
             moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
@@ -781,27 +808,7 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
 
-    [PunRPC]
-    void change_turn()
-    {
-        print("!!change turn!!");
-        if (Master.transform.childCount == 1)
-            Baton.transform.SetParent(Slave.transform);
-        else if (Slave.transform.childCount == 1)
-            Baton.transform.SetParent(Master.transform);
-        IsRollable = true;
-        if (MyTurn)
-        {
-            MyTurnSign.SetActive(false);
-            OpTurnSign.SetActive(true);
-        }
-        else
-        {
-            MyTurnSign.SetActive(true);
-            OpTurnSign.SetActive(false);
-        }
-        MyTurn = !MyTurn;
-    }
+
     [PunRPC]
     void set_turn_and_character(int turn, int master_mal, int slave_mal)
     {
@@ -859,6 +866,107 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         MyMovingMal.GetComponent<SpriteRenderer>().sprite = MyMalImage;
         OpMovingMal.GetComponent<SpriteRenderer>().sprite = OpMalImage;
+        PopTurn.transform.GetChild(0).GetComponent<Image>().sprite = MyMalImage;        
+    }
+
+    [PunRPC]
+    void change_turn()
+    {
+        print(MyTurn + "!!change turn!!" + PhotonNetwork.LocalPlayer.NickName);
+        if (Master.transform.childCount == 1)
+            Baton.transform.SetParent(Slave.transform);
+        else if (Slave.transform.childCount == 1)
+            Baton.transform.SetParent(Master.transform);
+
+        MyTurn = !MyTurn;
+        MyTurnSign.SetActive(MyTurn);
+        OpTurnSign.SetActive(!MyTurn);
+        IsRollable = MyTurn;
+        if (MyTurn)
+            StartCoroutine(show_turn());
+    }
+
+
+    IEnumerator show_turn()
+    {
+        PopTurn.transform.GetChild(0).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+        PopTurn.transform.GetChild(1).GetComponent<Image>().color = new Color(253/255f, 246/255f, 187/255f, 1f);
+        PopTurn.SetActive(true);
+        float turn_show_time = 0;
+        while (true)
+        {
+            turn_show_time += Time.deltaTime;
+            if (turn_show_time >= ShowPopTime)
+            {
+                break;
+            }
+            yield return null;
+        }
+
+        while (true)
+        {            
+            if (PopTurn.transform.GetChild(0).GetComponent<Image>().color.a <= 0)
+            {                
+                PopTurn.SetActive(false);
+                break;
+            }
+            PopTurn.transform.GetChild(0).GetComponent<Image>().color =
+                new Color(1f, 1f, 1f, PopTurn.transform.GetChild(0).GetComponent<Image>().color.a - VenishPopSpeed * Time.deltaTime);
+            PopTurn.transform.GetChild(1).GetComponent<Image>().color =
+                new Color(253 / 255f, 246 / 255f, 187 / 255f, PopTurn.transform.GetChild(0).GetComponent<Image>().color.a - VenishPopSpeed * Time.deltaTime);
+            yield return null;
+        }
+    }
+
+    [PunRPC]
+    void send_message_in_game(string who, string msg)
+    {
+        GameObject chatBubble = null;
+        if (who == PhotonNetwork.LocalPlayer.NickName)
+        {
+            if (MyChatBubbleBox.transform.childCount > 1)
+                Destroy(MyChatBubbleBox.transform.GetChild(1).gameObject);
+            chatBubble = Instantiate(MyChatBubble);
+            chatBubble.transform.SetParent(MyChatBubbleBox.transform);
+        }
+        else
+        {
+            if (OpChatBubbleBox.transform.childCount > 1)
+                Destroy(OpChatBubbleBox.transform.GetChild(1).gameObject);
+            chatBubble = Instantiate(OpChatBubble);
+            chatBubble.transform.SetParent(OpChatBubbleBox.transform);
+        }
+        chatBubble.transform.GetChild(1).GetComponent<TMP_Text>().text = msg;
+        StartCoroutine(MakeBubble(chatBubble));
+    }
+
+    IEnumerator MakeBubble(GameObject bubble)
+    {
+        bubble.transform.localScale = new Vector3(0f, 1f);
+        bubble.transform.localPosition = new Vector3(0f, 0f, 0f);
+        bubble.SetActive(true);
+        while (true)
+        {            
+            bubble.transform.localScale = new Vector3(bubble.transform.localScale.x + BubbleSpeed * Time.deltaTime, 1f);
+            if (bubble.transform.localScale.x >= 1)           
+            {
+                bubble.transform.localScale = new Vector3(1f, 1f);
+                break;
+            }
+            yield return null;
+        }
+        float bubble_show_time = 0;
+        while (true)
+        {
+            bubble_show_time += Time.deltaTime;
+            if (bubble_show_time >= BubbleTime)
+            {                
+                break;
+            }
+            yield return null;
+        }
+        Destroy(bubble);
+
     }
 
     void Clear()
@@ -883,6 +991,7 @@ public class InGame : MonoBehaviourPunCallbacks
             OpStartMalList.transform.GetChild(k).gameObject.SetActive(false);
         }
         GameEnd.SetActive(false);
+        RollingYut.SetActive(false);
         IsRolling = false;
         IsMoving = false;
         IsRollable = false;

@@ -54,6 +54,7 @@ MonoBehaviour:
   - change_turn
   - moving_start_mal
   - moving_moved_mal
+  - send_message_in_game
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
