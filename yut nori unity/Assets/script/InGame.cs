@@ -574,7 +574,7 @@ public class InGame : MonoBehaviourPunCallbacks
         int moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name) - (moving_cnt + 1);
         int caan_pos = int.Parse(des_caan.name);
         Vector3 layover_pos = way_over(moving_mal_pos, caan_pos) ;
-        if (layover_pos.magnitude != 0)
+        if (layover_pos.magnitude != 0 && moving_cnt != 5)
         {
             while (true)
             {
