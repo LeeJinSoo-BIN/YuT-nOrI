@@ -14,6 +14,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public Sprite[] YutGarak;
     public Sprite[] YutAnimal;
     public Sprite[] Ganzi;
+    public Sprite[] ESP;
     private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!", "µµÂø!" };
     private Color[] YutColor = new Color[] { new Color(255 / 255f, 223 / 255f, 206 / 255f, 1f),
                                             new Color(255 / 255f, 170 / 255f, 90 / 255f, 1f),
@@ -73,6 +74,17 @@ public class InGame : MonoBehaviourPunCallbacks
     public float BubbleSpeed = 10f;
     public float BubbleTime = 2f;
 
+
+    public GameObject PopEsp;
+    private GameObject ESPList;
+    public int MyEsp1;
+    public int MyEsp2;
+    public int OpEsp1;    
+    public int OpEsp2;
+    public float EspPopTime = 0.02f;
+    public float EspPopSlowDown = 1.2f;
+    private bool EspDone = false;
+
     public GameObject PopTurn;
     public float ShowPopTime = 3f;
     public float VenishPopSpeed = 3f;
@@ -81,13 +93,9 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
     
-
-    public GameObject Baton;
-    public GameObject Master;
-    public GameObject Slave;
-    public GameObject Wait;
     public GameObject GameEnd;
-
+    public GameObject Ready;
+    public GameObject GameStart;
 
     void Awake()
     {
@@ -97,10 +105,18 @@ public class InGame : MonoBehaviourPunCallbacks
     // Update is called once per frame
     void Update()
     {
+        if(GameStart.transform.childCount == 2 && PhotonNetwork.LocalPlayer.IsMasterClient)
+        {
+            GameObject ready = Instantiate(Ready);
+            ready.transform.SetParent(GameStart.transform);
+            PV.RPC("change_turn", RpcTarget.All);
+        }
+
+
         if (MyTurn)
         {
             IsMalMovable = Check_Mal_Movable(MyYutStackList, MyStartMalList);
-            if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving && MyTurn)
+            if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving && MyTurn && EspDone)
             {
                 PV.RPC("change_turn", RpcTarget.All);
             }
@@ -134,8 +150,6 @@ public class InGame : MonoBehaviourPunCallbacks
             InGameChatInputField.text = "";
             InGameChatInputField.ActivateInputField();
         }
-
-
     }
 
     public void RollButtonClick()
@@ -167,7 +181,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         else
         {
-            CurrentYut = back_cnt;
+            CurrentYut = 6;
         }
         CurrentYut--;//µµ0 °³1 °É2 À·3 ¸ð4 µÞµµ5 ³«6
         PV.RPC("roll_yut", RpcTarget.All, CurrentYut);
@@ -588,13 +602,13 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
 
-        Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
-        des_pos.z = 1f;
+        Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);        
         while (true)
         {
             moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
             if (Vector3.Magnitude(moving_mal.transform.position - des_pos) < 0.0001f)
             {
+                des_pos.z = 1f;
                 moving_mal.transform.position = des_pos;
                 action_moving_result(moving_mal, moving_cnt);
                 break;
@@ -791,6 +805,8 @@ public class InGame : MonoBehaviourPunCallbacks
         OpYutStackList = OpInfoList.transform.GetChild(5).gameObject;
 
 
+        ESPList = PopEsp.transform.GetChild(2).gameObject;
+
         MyName.text = PhotonNetwork.LocalPlayer.NickName;
         OpName.text = PhotonNetwork.PlayerListOthers[0].NickName;
 
@@ -801,8 +817,18 @@ public class InGame : MonoBehaviourPunCallbacks
             int slave__mal = Random.Range(0, 7);
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
-            PV.RPC("set_turn_and_character", RpcTarget.All, turn, master_mal, slave__mal);
-            PV.RPC("change_turn", RpcTarget.All);
+            
+            int master_esp1 = Random.Range(0, 12);
+            int slave_esp1 = Random.Range(0, 12);
+            while (master_esp1 == slave_esp1)
+                master_esp1 = Random.Range(0, 12);
+
+            int master_esp2 = Random.Range(0, 6);
+            int slave_esp2 = Random.Range(0, 6);
+            while (master_esp2 == slave_esp2)
+                master_esp2 = Random.Range(0, 6);
+            PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);
+            
         }
         Clear();
     }
@@ -810,12 +836,11 @@ public class InGame : MonoBehaviourPunCallbacks
 
 
     [PunRPC]
-    void set_turn_and_character(int turn, int master_mal, int slave_mal)
+    void set_turn_and_character_and_esp(int turn, int master_mal, int slave_mal, int master_esp1, int slave_esp1, int master_esp2, int slave_esp2)
     {
         print("setting");
         if (turn == 0)
         {
-            Baton.transform.SetParent(Master.transform);
             if (PhotonNetwork.LocalPlayer.IsMasterClient)
             {
                 MyTurn = true;
@@ -826,11 +851,9 @@ public class InGame : MonoBehaviourPunCallbacks
                 MyTurn = false;
                 IsRollable = false;
             }
-
         }
         else
         {
-            Baton.transform.SetParent(Slave.transform);
             if (!PhotonNetwork.LocalPlayer.IsMasterClient)
             {
                 MyTurn = true;
@@ -846,13 +869,22 @@ public class InGame : MonoBehaviourPunCallbacks
         if (PhotonNetwork.LocalPlayer.IsMasterClient)
         {
             MyMalImage = Ganzi[master_mal];
-            OpMalImage = Ganzi[slave_mal];            
+            OpMalImage = Ganzi[slave_mal];
+            MyEsp1 = master_esp1;
+            MyEsp2 = master_esp2;
+            OpEsp1 = slave_esp1;
+            OpEsp2 = slave_esp2;
         }
         else
         {
             MyMalImage = Ganzi[slave_mal];
-            OpMalImage = Ganzi[master_mal];            
-        }
+            OpMalImage = Ganzi[master_mal];
+            MyEsp1 = slave_esp1;
+            MyEsp2 = slave_esp2;
+            OpEsp1 = master_esp1;
+            OpEsp2 = master_esp2;
+        }        
+        StartCoroutine(Show_ESP_Choose(MyEsp1, MyEsp2));
         for (int k = 0; k < 4; k++)
         {
             MyStartMalList.transform.GetChild(k).GetComponent<Image>().sprite = MyMalImage;
@@ -866,18 +898,94 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         MyMovingMal.GetComponent<SpriteRenderer>().sprite = MyMalImage;
         OpMovingMal.GetComponent<SpriteRenderer>().sprite = OpMalImage;
-        PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;        
+        PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;
+        
     }
+
+    IEnumerator Show_ESP_Choose(int esp1, int esp2)
+    {
+        print("selct Esp");
+        PopEsp.SetActive(true);
+        int slow_down = 1;
+        for (int t = 0; t < 4; t++)
+        {
+            for (int k = 0; k < ESPList.transform.childCount - 6; k++)
+            {
+                ESPList.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
+                if (k == 0)
+                    ESPList.transform.GetChild(ESPList.transform.childCount - 6 - 1).GetChild(3).gameObject.SetActive(false);
+                else
+                    ESPList.transform.GetChild(k - 1).GetChild(3).gameObject.SetActive(false);
+
+                float timer = 0f;
+                while (true)
+                {
+                    timer += Time.deltaTime;
+                    if (timer > EspPopTime * slow_down * EspPopSlowDown)
+                        break;
+                    yield return null;
+                }
+                if (t == 3 && k == esp1)
+                    break;
+                if (k % 3 == 0)
+                    slow_down++;
+            }            
+        }
+
+        slow_down = 1;
+        for (int t = 0; t < 4; t++)
+        {
+            for (int k = ESPList.transform.childCount - 6; k < ESPList.transform.childCount; k++)
+            {
+                ESPList.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
+                if (k == ESPList.transform.childCount - 6)
+                    ESPList.transform.GetChild(ESPList.transform.childCount - 1).GetChild(3).gameObject.SetActive(false);
+                else
+                    ESPList.transform.GetChild(k - 1).GetChild(3).gameObject.SetActive(false);
+
+                float timer = 0f;
+                while (true)
+                {
+                    timer += Time.deltaTime;
+                    if (timer > EspPopTime * slow_down * EspPopSlowDown)
+                        break;
+                    yield return null;
+                }
+                if (t == 3 && k == esp2 + ESPList.transform.childCount - 6)
+                    break;
+                if (k % 3 == 0)
+                    slow_down++;
+            }            
+        }
+        float timer2 = 0;        
+        while (true)
+        {
+            timer2 += Time.deltaTime;
+            if (timer2 > 1.5)
+                break;
+            yield return null;
+        }
+        MyEspList.transform.GetChild(1).GetComponent<Image>().sprite = ESP[esp1];
+        MyEspList.transform.GetChild(2).GetComponent<Image>().sprite = ESP[ESPList.transform.childCount - 6 + esp2];
+
+        PV.RPC("done_esp", RpcTarget.All);
+        
+    }
+
+    [PunRPC]
+    void done_esp()
+    {
+        GameObject ready = Instantiate(Ready);
+        ready.transform.SetParent(GameStart.transform);
+    }
+
 
     [PunRPC]
     void change_turn()
     {
         print(MyTurn + "!!change turn!!" + PhotonNetwork.LocalPlayer.NickName);
-        if (Master.transform.childCount == 1)
-            Baton.transform.SetParent(Slave.transform);
-        else if (Slave.transform.childCount == 1)
-            Baton.transform.SetParent(Master.transform);
-
+        EspDone = true;
+        PopEsp.SetActive(false);
         MyTurn = !MyTurn;
         MyTurnSign.SetActive(MyTurn);
         OpTurnSign.SetActive(!MyTurn);
