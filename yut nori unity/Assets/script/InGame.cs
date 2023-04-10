@@ -153,7 +153,8 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
     public void RollButtonClick()
-    {
+    {        
+        Random.InitState((int)(Time.time * 1000f));        
         IsRollable = false;
         int back_cnt = 0;
         int back_do = 0;
@@ -181,7 +182,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         else
         {
-            CurrentYut = 6;
+            CurrentYut = back_cnt;
         }
         CurrentYut--;//µµ0 °³1 °É2 À·3 ¸ð4 µÞµµ5 ³«6
         PV.RPC("roll_yut", RpcTarget.All, CurrentYut);
@@ -592,8 +593,8 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             while (true)
             {
-                moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, layover_pos, MoveSpeed * Time.deltaTime);
-                if (Vector3.Magnitude(moving_mal.transform.position - layover_pos) < 0.0001f)
+                moving_mal.transform.position = Vector2.MoveTowards(moving_mal.transform.position, layover_pos, MoveSpeed * Time.deltaTime);
+                if (Vector2.SqrMagnitude(moving_mal.transform.position - layover_pos) < 0.0001f)
                 {
                     moving_mal.transform.position = layover_pos;
                     break;
@@ -605,8 +606,8 @@ public class InGame : MonoBehaviourPunCallbacks
         Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);        
         while (true)
         {
-            moving_mal.transform.position = Vector3.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
-            if (Vector3.Magnitude(moving_mal.transform.position - des_pos) < 0.0001f)
+            moving_mal.transform.position = Vector2.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
+            if (Vector2.SqrMagnitude(moving_mal.transform.position - des_pos) < 0.0001f)
             {
                 des_pos.z = 1f;
                 moving_mal.transform.position = des_pos;
