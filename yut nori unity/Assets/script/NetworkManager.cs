@@ -48,6 +48,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
 
+    public GameObject OptionPanel;
+    public TMP_Dropdown Resolution;
+
     private void Awake()
     {
         Screen.SetResolution(960, 540, false);
@@ -62,6 +65,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         CreateRoomPanel.SetActive(false);
         InRoomPanel.SetActive(false);
         JoinRoomPanel.SetActive(false);
+        OptionPanel.SetActive(false);
     }
 
     // Update is called once per frame
@@ -326,6 +330,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
         current_clicked_button.transform.parent.gameObject.SetActive(false);
+    }
+
+
+    public void OptionButtonClick()
+    {
+        OptionPanel.SetActive(!OptionPanel.activeSelf);
+    }
+
+    public void SelectResolution()
+    {
+        
+        string selected_resolution_string = Resolution.options[Resolution.value].text;
+        print(selected_resolution_string);
+        string[] selected_resolution = selected_resolution_string.Split(" x ");
+        Screen.SetResolution(int.Parse(selected_resolution[0]), int.Parse(selected_resolution[1]), false);
+        
     }
 }
 
