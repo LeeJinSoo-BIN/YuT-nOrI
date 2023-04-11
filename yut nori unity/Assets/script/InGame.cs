@@ -84,6 +84,11 @@ public class InGame : MonoBehaviourPunCallbacks
     public float EspPopTime = 0.02f;
     public float EspPopSlowDown = 1.2f;
     private bool EspDone = false;
+    private bool IsEsp2Used = false;
+    private bool IsEsp2Using = false;
+    private bool IsRolled = false;
+
+
 
     public GameObject PopTurn;
     public float ShowPopTime = 3f;
@@ -115,6 +120,14 @@ public class InGame : MonoBehaviourPunCallbacks
 
         if (MyTurn)
         {
+            if (IsRolled || IsEsp2Used)
+            {
+                MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = false;
+            }
+            else
+            {
+                MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = true;
+            }
             IsMalMovable = Check_Mal_Movable(MyYutStackList, MyStartMalList);
             if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving && MyTurn && EspDone)
             {
@@ -140,6 +153,7 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             IsRollable = false;
             IsMalMovable = false;
+            MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = false;
         }
         RollButton.interactable = (IsRollable && !IsMoving && !IsRolling);
 
@@ -153,8 +167,7 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
     public void RollButtonClick()
-    {        
-        Random.InitState((int)(Time.time * 1000f));        
+    {          
         IsRollable = false;
         int back_cnt = 0;
         int back_do = 0;
@@ -185,22 +198,41 @@ public class InGame : MonoBehaviourPunCallbacks
             CurrentYut = back_cnt;
         }
         CurrentYut--;//µµ0 °³1 °É2 À·3 ¸ð4 µÞµµ5 ³«6
-        PV.RPC("roll_yut", RpcTarget.All, CurrentYut);
+        if (IsEsp2Using)
+        {
+            CurrentYut = MyEsp2;
+            IsEsp2Used = true;
+        }
+        PV.RPC("roll_yut", RpcTarget.All, CurrentYut, IsEsp2Using);
     }
 
     [PunRPC]
-    void roll_yut(int rolled_yut)
+    void roll_yut(int rolled_yut, bool esp2using)
     {
         RollingYut.SetActive(true);
         IsRolling = true;
         IsRollable = false;
-
         RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = YutGarak[7];
         RollingYut.transform.GetChild(2).gameObject.SetActive(false);
         RollingYut.transform.GetChild(3).gameObject.SetActive(false);        
         CurrentYut = rolled_yut;
+        IsEsp2Using = esp2using;
+        if (IsEsp2Using)
+        {
+            if (MyTurn)
+            {
+                MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = false;
+                MyEspList.transform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+                MyEspList.transform.GetChild(2).GetChild(1).gameObject.SetActive(true);
+            }
+            else
+            {
+                OpEspList.transform.GetChild(2).GetComponent<Image>().sprite = ESP[OpEsp2 + ESPList.transform.childCount - 6];
+                OpEspList.transform.GetChild(2).GetChild(0).gameObject.SetActive(true);
+            }
 
-
+        }
+        IsRolled = true;
         StartCoroutine(show_rolling());
     }
     
@@ -236,9 +268,24 @@ public class InGame : MonoBehaviourPunCallbacks
         RollingYut.transform.GetChild(2).gameObject.SetActive(true);
         RollingYut.transform.GetChild(3).gameObject.SetActive(true);
 
-        RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = YutGarak[rolled_yut];
-        RollingYut.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = YutAnimal[rolled_yut];
-        RollingYut.transform.GetChild(3).GetComponent<TMP_Text>().text = YutHanguel[rolled_yut];
+        if (IsEsp2Using)
+        {
+            RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = ESP[rolled_yut + ESPList.transform.childCount - 6];
+            RollingYut.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = null;
+            RollingYut.transform.GetChild(3).GetComponent<TMP_Text>().text = "½ÅÀÇ ¼Õ!! ";
+            RollingYut.transform.GetChild(3).GetComponent<TMP_Text>().text += YutHanguel[rolled_yut];
+            if (!MyTurn)
+            {
+                OpEspList.transform.GetChild(2).GetComponent<Image>().sprite = ESP[rolled_yut + ESPList.transform.childCount - 6];
+            }
+            IsEsp2Using = false;
+        }
+        else
+        {
+            RollingYut.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = YutGarak[rolled_yut];
+            RollingYut.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = YutAnimal[rolled_yut];
+            RollingYut.transform.GetChild(3).GetComponent<TMP_Text>().text = YutHanguel[rolled_yut];
+        }
 
         if (rolled_yut != 6) // ³«
         { 
@@ -287,6 +334,7 @@ public class InGame : MonoBehaviourPunCallbacks
             {                
                 IsRollable = true;
             }
+
         }
         else
         {
@@ -299,6 +347,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 }
             }
         }
+
+
         IsRolling = false;
     }
 
@@ -778,6 +828,20 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
 
+    public void Esp2ButtonClick()
+    {
+        IsEsp2Using = !IsEsp2Using;
+        MyEspList.transform.GetChild(2).GetChild(0).gameObject.SetActive(IsEsp2Using);
+    }
+
+
+
+
+
+
+
+
+
 
     public void EndGameButtonClick()
     {
@@ -905,7 +969,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
     IEnumerator Show_ESP_Choose(int esp1, int esp2)
     {
-        print("selct Esp");
+        print("select Esp");
         PopEsp.SetActive(true);
         int slow_down = 1;
         for (int t = 0; t < 4; t++)
@@ -992,7 +1056,10 @@ public class InGame : MonoBehaviourPunCallbacks
         OpTurnSign.SetActive(!MyTurn);
         IsRollable = MyTurn;
         if (MyTurn)
+        {
             StartCoroutine(show_turn());
+            IsRolled = false;
+        }
     }
 
 
