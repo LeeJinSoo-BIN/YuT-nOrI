@@ -834,13 +834,37 @@ public class InGame : MonoBehaviourPunCallbacks
         MyEspList.transform.GetChild(2).GetChild(0).gameObject.SetActive(IsEsp2Using);
     }
 
+    public void Esp1ButtonClick()
+    {
+        if(MyEsp1 == 0)
+        {
+
+        }
+    }
 
 
+    public void BombButtonClick()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
 
+    }
 
+    public void GoHomeButtonClick()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
 
+    }
 
-
+    void on_off_caan_trap(int trap_type, bool on, int exept_num) // trap type 1 == bomb, 2==home
+    {
+        for(int k = 0; k <Caan.transform.childCount; k++)
+        {
+            if (k == 22) continue;
+            Caan.transform.GetChild(k).GetChild(trap_type).gameObject.SetActive(on);
+            if (k == exept_num)
+                Caan.transform.GetChild(k).GetChild(trap_type).gameObject.SetActive(!on);
+        }
+    }
 
 
     public void EndGameButtonClick()
