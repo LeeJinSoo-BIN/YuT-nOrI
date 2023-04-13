@@ -57,6 +57,11 @@ MonoBehaviour:
   - send_message_in_game
   - set_turn_and_character_and_esp
   - done_esp
+  - Esp1Used
+  - PlantingTrap
+  - set_esp_done
+  - ready_in_room
+  - start_game_in_room
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

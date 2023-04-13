@@ -175,7 +175,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         update_room_member();
         PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "¥‘¿Ã ≈¿Â«œºÃΩ¿¥œ¥Ÿ</color>");
-        PV.RPC("ready", RpcTarget.AllBuffered, false);        
+        PV.RPC("ready_in_room", RpcTarget.AllBuffered, false);        
     }
     
     void update_room_member()
@@ -256,7 +256,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         InRoomPanel.SetActive(false);
         LobbyPanel.SetActive(true);
         ChatInputField.text = "";
-        ready(false);
+        ready_in_room(false);
     }  
 
     void turn_on_buttons(bool onoff)
@@ -270,14 +270,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void ReadyButtonClick()
     {        
-        PV.RPC("ready", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
+        PV.RPC("ready_in_room", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
     }
     public void StartButtonClick()
     {
         if (ReadyInRoomPanel.activeSelf)
         {
-            PV.RPC("ready", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
-            PV.RPC("start_game", RpcTarget.All);
+            PV.RPC("ready_in_room", RpcTarget.All, !ReadyInRoomPanel.activeSelf);
+            PV.RPC("start_game_in_room", RpcTarget.All);
         }
     }
     
@@ -298,7 +298,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     
     [PunRPC]
-    void ready(bool isReady)
+    void ready_in_room(bool isReady)
     {
         ReadyInRoomPanel.SetActive(isReady);
         string NickName = "";
@@ -319,7 +319,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void start_game()
+    void start_game_in_room()
     {
         WaitCanvas.SetActive(false);
         GameCanvas.SetActive(true);  

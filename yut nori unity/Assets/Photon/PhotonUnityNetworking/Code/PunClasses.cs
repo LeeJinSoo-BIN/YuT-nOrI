@@ -106,6 +106,8 @@ namespace Photon.Pun
     // the documentation for the interface methods becomes inherited when Doxygen builds it.
     public class MonoBehaviourPunCallbacks : MonoBehaviourPun, IConnectionCallbacks , IMatchmakingCallbacks , IInRoomCallbacks, ILobbyCallbacks, IWebRpcCallback, IErrorInfoCallback
     {
+
+    private bool IsEsp2Using = false;
         public virtual void OnEnable()
         {
             PhotonNetwork.AddCallbackTarget(this);
