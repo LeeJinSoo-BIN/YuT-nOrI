@@ -1521,8 +1521,8 @@ public class InGame : MonoBehaviourPunCallbacks
 
             if (master_esp1 == 2)
                 master_esp1 = 9;
-            if (master_esp2 == 2)
-                master_esp2 = 9;
+            if (slave_esp1 == 2)
+                slave_esp1 = 9;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);
             
         }
