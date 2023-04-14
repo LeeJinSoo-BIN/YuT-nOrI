@@ -117,7 +117,7 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEsp2Used = false;
     private bool IsRolled = false;
     private int[] TrapType = new int[] { 1, 2 }; // 1 == 콰쾅, 2 == 집으로
-
+    private bool IsIslandUsed = false;
 
 
     [Header("Turn")]
@@ -1185,6 +1185,7 @@ public class InGame : MonoBehaviourPunCallbacks
             case 2: // 서양 문물
                 break;
             case 3: // 무인도
+                PV.RPC("island", RpcTarget.All, IsEsp1Using);
                 break;
             case 4: // 킵이요
                 break;
@@ -1227,6 +1228,11 @@ public class InGame : MonoBehaviourPunCallbacks
         on_off_caan_trap(trap_type, false, trap_pos);
     }
 
+    [PunRPC]
+    void island(bool usingEsp1)
+    {
+        IsIslandUsed = usingEsp1;
+    }
 
     IEnumerator show_caught_in_trap(int[] esp_stack, string[] ment, bool end)
     {
@@ -1383,7 +1389,7 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_esp2 == slave_esp2)
                 master_esp2 = Random.Range(0, 6);
             master_esp1 = 0;
-            slave_esp1 = 9;
+            slave_esp1 = 3;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);
             
         }
@@ -1552,6 +1558,20 @@ public class InGame : MonoBehaviourPunCallbacks
     void change_turn()
     {
         WaitChanging = true;
+        if (IsIslandUsed)
+        {
+            if (!MyTurn)
+            {
+                PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = ESP_sprite[OpEsp1];
+                PopTurn.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "한턴 쉬세요!";
+                StartCoroutine(show_turn());
+            }
+            else
+                IsEsp1Used = true;
+            Esp1Used();
+            MyTurn = !MyTurn;
+            IsIslandUsed = false;
+        }
         StartCoroutine(wait_and_change());
     }
     IEnumerator wait_and_change()
@@ -1577,13 +1597,15 @@ public class InGame : MonoBehaviourPunCallbacks
         OpTurnSign.SetActive(!MyTurn);
         IsRollable = MyTurn;
         if (MyTurn)
-        {
+        {            
             StartCoroutine(show_turn());
             IsRolled = false;
             if (!IsEsp1Used)
                 MyEspList.transform.GetChild(1).GetComponent<Button>().interactable = true;
             if (!IsEsp2Used)
                 MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = true;
+
+
         }
         WaitChanging = false;
     }
@@ -1620,6 +1642,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().color.a - VenishPopSpeed * Time.deltaTime);
             yield return null;
         }
+        PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;
+        PopTurn.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "내 차례!";
     }
 
     #endregion
