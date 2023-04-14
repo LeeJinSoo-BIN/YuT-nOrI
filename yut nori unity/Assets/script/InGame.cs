@@ -170,7 +170,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 {
                     PV.RPC("change_turn", RpcTarget.All);
                 }
-                if (IsMalMovable && !IsMoving && !IsRolling && !IsMyStartMalClicked)
+                if (IsMalMovable && !IsMoving && !IsRolling)
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
@@ -192,7 +192,10 @@ public class InGame : MonoBehaviourPunCallbacks
                 IsMalMovable = false;
                 MyEspList.transform.GetChild(1).GetComponent<Button>().interactable = false;
                 MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = false;
-
+                for (int k = 0; k < 4; k++)
+                {
+                    MyStartMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
+                }
             }
             RollButton.interactable = (IsRollable && !IsMoving && !IsRolling);
 
@@ -404,10 +407,18 @@ public class InGame : MonoBehaviourPunCallbacks
     #region Move
     public void MyStartMalClick()
     {
-
+        if (IsMyMovedMalClicked)
+        {
+            IsMyMovedMalClicked = false;
+            MyClickedMovableMal.transform.GetChild(3).gameObject.SetActive(false);
+        }
         MyClickedMovableMal = EventSystem.current.currentSelectedGameObject;
+        if (MyClickedMovableMal == null)
+            return;
         IsMyStartMalClicked = !IsMyStartMalClicked;
-        IsMyMovedMalClicked = false;
+        
+        
+        MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(IsMyStartMalClicked);
         if (IsMyStartMalClicked)
         {
             MyClickedMovableMal = EventSystem.current.currentSelectedGameObject;
@@ -440,10 +451,14 @@ public class InGame : MonoBehaviourPunCallbacks
 
     public void MovedMalClick(GameObject clicked_moved_mal)
     {
-        IsMyMovedMalClicked = !IsMyMovedMalClicked;
-        IsMyStartMalClicked = false;
+        IsMyMovedMalClicked = !IsMyMovedMalClicked;        
+        if (IsMyStartMalClicked)
+        {
+            MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(false);
+            IsMyStartMalClicked = false;
+        }        
         MyClickedMovableMal = clicked_moved_mal;
-
+        MyClickedMovableMal.transform.GetChild(3).gameObject.SetActive(IsMyMovedMalClicked);
         if (IsMyMovedMalClicked)
         {
             print("moved mal click" + clicked_moved_mal.name + " " + clicked_moved_mal.transform.GetChild(2).name);
@@ -561,6 +576,7 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         if (EventSystem.current.currentSelectedGameObject == null)
             return;
+        
         GameObject current_clicked_caan = EventSystem.current.currentSelectedGameObject;
         print(current_clicked_caan.name);
         int clicked_caan_num = int.Parse(current_clicked_caan.name);
@@ -569,16 +585,15 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             turn_on_off_all_caan(false);
             int my_clicked_start_mal_num = MyClickedMovableMal.name[4] - '1';
-
-
+            MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(false);
             PV.RPC("moving_start_mal", RpcTarget.All, my_clicked_start_mal_num, clicked_caan_num, moving_yut);
             IsMyStartMalClicked = false;
         }
         if (IsMyMovedMalClicked)
         {
             turn_on_off_all_caan(false);
-
             int clicked_mal_pos = int.Parse(MyClickedMovableMal.transform.GetChild(2).name);
+            MyClickedMovableMal.transform.GetChild(3).gameObject.SetActive(false);
             PV.RPC("moving_moved_mal", RpcTarget.All, clicked_mal_pos, clicked_caan_num, moving_yut);
             IsMyMovedMalClicked = false;
         }
@@ -791,6 +806,20 @@ public class InGame : MonoBehaviourPunCallbacks
     }
     IEnumerator MoveMotion(GameObject moving_mal, GameObject des_caan, int moving_cnt)
     {
+        if (Check_Mal_Movable(MyYutStackList, MyStartMalList))
+        {
+            for (int t = 0; t < 4; t++)
+            {
+                MyStartMalList.transform.GetChild(t).GetComponent<Button>().interactable = true;
+            }
+        }
+        else
+        {
+            for (int t = 0; t < 4; t++)
+            {
+                MyStartMalList.transform.GetChild(t).GetComponent<Button>().interactable = false;
+            }
+        }
         int moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
         int des_caan_pos = int.Parse(des_caan.name);
         int[] trap_pos = where_is_trap();
@@ -963,7 +992,8 @@ public class InGame : MonoBehaviourPunCallbacks
                                 break;
                             }
                         }
-                    }                    
+                    }
+                    
                     return;
                 }
                 else
@@ -1099,7 +1129,7 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             moved_mal.transform.GetChild(0).gameObject.SetActive(false);
             moved_mal.transform.GetChild(1).gameObject.SetActive(false);
-        }
+        }        
         turn_on_off_all_moved_mal(true);
         IsMoving = false;
     }
@@ -1427,14 +1457,14 @@ public class InGame : MonoBehaviourPunCallbacks
         PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;
         MyEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(MyEsp1).GetChild(2).GetComponent<TMP_Text>().text;
         MyEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[MyEsp1];
-        MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 37 + EspTooltip[MyEsp1].Length / 15 * 23);
+        MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + EspTooltip[MyEsp1].Length / 15 * 23);
         MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + MyEsp2).GetChild(2).GetComponent<TMP_Text>().text +" ";
         MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[MyEsp2];
         MyEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + MyEsp2];
 
         OpEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(OpEsp1).GetChild(2).GetComponent<TMP_Text>().text;
         OpEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[OpEsp1];
-        OpEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 37 + EspTooltip[OpEsp1].Length / 15 * 23);
+        OpEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + EspTooltip[OpEsp1].Length / 15 * 23);
         OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + OpEsp2).GetChild(2).GetComponent<TMP_Text>().text + " ";
         OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[OpEsp2];
         OpEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + OpEsp2];
