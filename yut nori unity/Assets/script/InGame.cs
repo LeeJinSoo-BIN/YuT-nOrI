@@ -29,7 +29,7 @@ public class InGame : MonoBehaviourPunCallbacks
                                                 "상대방의 말 하나를 출발 이전으로 돌려보낸다. 쌓인 말이 있더라도 하나만 돌려보낸다.", //1. 안 돼. 돌아가.
                                                 "윷이 아닌 주사위를 굴린다.\n주사위를 2개를 굴리고, 나온 눈의 절반 (반올림) 만큼의 칸을 이동할 수 있다.\n더블이 나오면 1개를 더 굴린다.", //2. 서양문물
                                                 "상대 차례를 1번 건너뛴다.",//3. 무인도
-                                                "이번 차례에 던지는 윷을 모두 다음 차례에 사용한다.", //4. 킵이요.
+                                                "이번 차례에 던지는 윷을 모두 다음 차례에 사용한다. 킵한 윷은 다음턴에 윷을 굴려야 사용할 수 있다.", //4. 킵이요.
                                                 "말을 하나 얹어서 출발한다.", //5. 부정출발
                                                 "상대 말 하나와 내 말 위치를 바꾼다.",//6. 초동역학위치전환기
                                                 "이번 차례에 처음 굴린 윷을 복사한다.",//7. 메타몽
@@ -117,7 +117,9 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEsp2Used = false;
     private bool IsRolled = false;
     private int[] TrapType = new int[] { 1, 2 }; // 1 == 콰쾅, 2 == 집으로
-    private bool IsIslandUsed = false;
+    public bool IsEspIslandUsing = false;
+    private bool IsEspKeepUsing = false;
+    private bool IsEspGoBackUsing = false;
 
 
     [Header("Turn")]
@@ -185,6 +187,21 @@ public class InGame : MonoBehaviourPunCallbacks
                         }
                     }
                 }
+                if (IsEspGoBackUsing)
+                {
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                        RaycastHit2D hit = Physics2D.Raycast(pos, Vector2.zero);
+                        if (hit.collider != null)
+                        {
+                            if (hit.transform.parent.gameObject == MalBox && hit.transform.name[0] == 'O')
+                            {
+                                OpMalClick(hit.transform.gameObject);                                
+                            }
+                        }
+                    }
+                }
             }
             else
             {
@@ -244,8 +261,14 @@ public class InGame : MonoBehaviourPunCallbacks
         CurrentYut--;//도0 개1 걸2 윷3 모4 뒷도5 낙6
         if (IsEsp1Using && !IsEsp1Used)
         {
-            IsEsp1Using = false;
-            Esp1ButtonClick();
+            if (IsEspIslandUsing)
+            {
+
+            }
+            else
+            {
+                Esp1ButtonClick();
+            }
         }
 
         if (IsEsp2Using)
@@ -361,7 +384,12 @@ public class InGame : MonoBehaviourPunCallbacks
         RollingYut.SetActive(false);
         if (MyTurn)
         {
-            if (Check_Mal_Movable(MyYutStackList, MyStartMalList))
+            if (IsEspKeepUsing)
+            {
+                PV.RPC("Esp1Used", RpcTarget.All);
+                IsEsp1Used = true;
+            }
+            else if (Check_Mal_Movable(MyYutStackList, MyStartMalList))
             {
                 for (int t = 0; t < 4; t++)
                 {
@@ -380,6 +408,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text = "0";
                 }
             }
+
             if (rolled_yut == 3 || rolled_yut == 4) //윷 모
             {
                 IsRollable = true;
@@ -1138,6 +1167,8 @@ public class InGame : MonoBehaviourPunCallbacks
 
     bool Check_Mal_Movable(GameObject YutStackList, GameObject StartMalList)
     {
+        if (IsEspKeepUsing)
+            return false;
         for (int k = 0; k < 5; k++)
         {
             if (int.Parse(YutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text) > 0)
@@ -1180,7 +1211,10 @@ public class InGame : MonoBehaviourPunCallbacks
             case 0: // 콰쾅!
                 on_off_caan_trap(1, IsEsp1Using, -1);
                 break;
-            case 1: // 안돼 돌아가
+            case 1: // 안돼 돌아가                
+                click_go_back(IsEsp1Using);
+                MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
+
                 break;
             case 2: // 서양 문물
                 break;
@@ -1188,6 +1222,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 PV.RPC("island", RpcTarget.All, IsEsp1Using);
                 break;
             case 4: // 킵이요
+                IsEspKeepUsing = IsEsp1Using;
                 break;
             case 5: // 부정출발
                 break;
@@ -1226,12 +1261,6 @@ public class InGame : MonoBehaviourPunCallbacks
             Caan.transform.GetChild(0).GetChild(trap_type).gameObject.SetActive(true);
         current_planting_trap.GetComponent<Button>().interactable = false;
         on_off_caan_trap(trap_type, false, trap_pos);
-    }
-
-    [PunRPC]
-    void island(bool usingEsp1)
-    {
-        IsIslandUsed = usingEsp1;
     }
 
     IEnumerator show_caught_in_trap(int[] esp_stack, string[] ment, bool end)
@@ -1276,9 +1305,110 @@ public class InGame : MonoBehaviourPunCallbacks
                 yield return null;
             }
         }
-        if(end)
+        if (end)
             IsMoving = false;
     }
+
+
+    [PunRPC]
+    void island(bool usingEsp1)
+    {
+        IsEspIslandUsing = usingEsp1;
+    }
+
+    void click_go_back(bool usingEsp1)
+    {
+        print("go_back " + usingEsp1);
+        int op_mal_cnt = 0;
+        for (int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            if (MalBox.transform.GetChild(k).name[0] == 'O')
+                op_mal_cnt++;
+        }
+        if (op_mal_cnt >= 1)
+        {
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (MalBox.transform.GetChild(k).name[0] == 'O')
+                {
+                    MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(usingEsp1);
+                }
+            }
+        }
+        else
+            IsEsp1Using = false;
+        IsEspGoBackUsing = IsEsp1Using;        
+    }
+    
+    void OpMalClick(GameObject clicked_mal)
+    {
+        print(clicked_mal.name);
+        for(int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            if (MalBox.transform.GetChild(k).gameObject == clicked_mal)
+            {
+                PV.RPC("use_go_back", RpcTarget.All, k);
+                break;
+            }
+        }
+        for (int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            if (MalBox.transform.GetChild(k).name[0] == 'O')
+            {
+                MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
+            }
+        }
+        IsEsp1Used = true;
+        IsEsp1Using = false;
+    }
+
+    [PunRPC]
+    void use_go_back(int mal_num)
+    {
+        GameObject clicked_mal = MalBox.transform.GetChild(mal_num).gameObject;
+        print(clicked_mal.name);
+        int mal_cnt = int.Parse(clicked_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
+        if (MyTurn)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                if (!OpStartMalList.transform.GetChild(k).gameObject.activeSelf && !OpStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
+                {
+                    OpStartMalList.transform.GetChild(k).gameObject.SetActive(true);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                if (!MyStartMalList.transform.GetChild(k).gameObject.activeSelf && !MyStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
+                {
+                    MyStartMalList.transform.GetChild(k).gameObject.SetActive(true);
+                    break;
+                }
+            }
+        }
+        if (mal_cnt > 1)
+        {
+            clicked_mal.transform.GetChild(1).GetComponent<TMP_Text>().text = (mal_cnt - 1).ToString();
+            if (mal_cnt - 1 == 1)
+            {
+                clicked_mal.transform.GetChild(0).gameObject.SetActive(false);
+                clicked_mal.transform.GetChild(1).gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            Destroy(clicked_mal);
+        }
+        Esp1Used();
+        int[] esp_stack = { 1 };
+        string[] ment = { "안 돼. 돌아가." };
+        StartCoroutine(show_caught_in_trap(esp_stack, ment, false));
+    }
+
 
     [PunRPC]
     void Esp1Used()
@@ -1379,8 +1509,8 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             
-            int master_esp1 = Random.Range(0, 12);
-            int slave_esp1 = Random.Range(0, 12);
+            int master_esp1 = Random.Range(0, 5);
+            int slave_esp1 = Random.Range(0, 5);
             while (master_esp1 == slave_esp1)
                 master_esp1 = Random.Range(0, 12);
 
@@ -1388,8 +1518,11 @@ public class InGame : MonoBehaviourPunCallbacks
             int slave_esp2 = Random.Range(0, 6);
             while (master_esp2 == slave_esp2)
                 master_esp2 = Random.Range(0, 6);
-            master_esp1 = 0;
-            slave_esp1 = 3;
+
+            if (master_esp1 == 2)
+                master_esp1 = 9;
+            if (master_esp2 == 2)
+                master_esp2 = 9;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);
             
         }
@@ -1463,14 +1596,14 @@ public class InGame : MonoBehaviourPunCallbacks
         PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;
         MyEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(MyEsp1).GetChild(2).GetComponent<TMP_Text>().text;
         MyEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[MyEsp1];
-        MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + EspTooltip[MyEsp1].Length / 15 * 23);
+        MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + (EspTooltip[MyEsp1].Length + 18) / 18 * 23);
         MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + MyEsp2).GetChild(2).GetComponent<TMP_Text>().text +" ";
         MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[MyEsp2];
         MyEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + MyEsp2];
 
         OpEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(OpEsp1).GetChild(2).GetComponent<TMP_Text>().text;
         OpEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[OpEsp1];
-        OpEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + EspTooltip[OpEsp1].Length / 15 * 23);
+        OpEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + (EspTooltip[OpEsp1].Length + 18) / 18 * 23);
         OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + OpEsp2).GetChild(2).GetComponent<TMP_Text>().text + " ";
         OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[OpEsp2];
         OpEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + OpEsp2];
@@ -1558,7 +1691,7 @@ public class InGame : MonoBehaviourPunCallbacks
     void change_turn()
     {
         WaitChanging = true;
-        if (IsIslandUsed)
+        if (IsEspIslandUsing)
         {
             if (!MyTurn)
             {
@@ -1570,7 +1703,11 @@ public class InGame : MonoBehaviourPunCallbacks
                 IsEsp1Used = true;
             Esp1Used();
             MyTurn = !MyTurn;
-            IsIslandUsed = false;
+            IsEspIslandUsing = false;
+        }
+        else if (IsEspKeepUsing)
+        {
+            IsEspKeepUsing = false;
         }
         StartCoroutine(wait_and_change());
     }
@@ -1605,6 +1742,7 @@ public class InGame : MonoBehaviourPunCallbacks
             if (!IsEsp2Used)
                 MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = true;
 
+            
 
         }
         WaitChanging = false;

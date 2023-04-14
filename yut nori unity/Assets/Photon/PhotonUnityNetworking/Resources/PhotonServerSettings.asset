@@ -63,6 +63,7 @@ MonoBehaviour:
   - ready_in_room
   - start_game_in_room
   - island
+  - use_go_back
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
