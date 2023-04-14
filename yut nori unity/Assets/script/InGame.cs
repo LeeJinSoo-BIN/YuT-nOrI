@@ -798,7 +798,7 @@ public class InGame : MonoBehaviourPunCallbacks
             int caught_trap_pos = 31;
             for (int k = 0; k < TrapType.Length; k++)
             {
-                if (start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos)
+                if ((start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos) || des_pos == trap_pos[TrapType[k]])
                 {
                     if (caught_trap_pos > trap_pos[TrapType[k]])
                         caught_trap_pos = trap_pos[TrapType[k]];
@@ -1880,6 +1880,15 @@ public class InGame : MonoBehaviourPunCallbacks
         for (int k = 2; k < MalBox.transform.childCount; k++)
         {
             Destroy(MalBox.transform.GetChild(k).gameObject);
+        }
+        for (int k = 0; k < GameStart.transform.childCount; k++)
+        {
+
+            Destroy(GameStart.transform.GetChild(k).gameObject);
+        }
+        for (int k = 0; k < ESPList.transform.childCount; k++)
+        {
+            ESPList.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
         }
         turn_on_off_all_caan(false);
         turn_on_off_all_moved_mal(false);
