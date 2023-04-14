@@ -187,7 +187,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         }
                     }
                 }
-                if (IsEspGoBackUsing)
+                if (IsEspGoBackUsing && !IsEsp1Used)
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
@@ -242,17 +242,17 @@ public class InGame : MonoBehaviourPunCallbacks
             }
             else if (yut == BackProbability)
             {
-                back_cnt = 7; // ³«
+                back_cnt = 7; // ³« 7
                 break;
             }
         }
         if (back_cnt == 1 && back_do == 1)
         {
-            CurrentYut = 6; // µÞµµ
+            CurrentYut = 6; // µÞµµ 6
         }
         else if (back_cnt == 0)
         {
-            CurrentYut = 5; // ¸ð
+            CurrentYut = 5; // ¸ð 5
         }
         else
         {
@@ -720,13 +720,28 @@ public class InGame : MonoBehaviourPunCallbacks
             return Caan.transform.GetChild(15).gameObject;
         return Caan.transform.GetChild(0).gameObject;
     }
-    int check_trap(int start_pos, int des_pos, int[] trap_pos)
+    int check_trap(int start_pos, int des_pos, int[] trap_pos, int rolled_yut)
     {
         if (des_pos == -1 || trap_pos[0] == 0)
+            return -1;
+        if (start_pos == 0 && des_pos == 30)
             return -1;
         if (des_pos == 0)
             des_pos = 30;
 
+        print("from " + start_pos + ", to " + des_pos + ", with " + rolled_yut);
+        if (rolled_yut == 5)
+        {
+            for (int k = 0; k < TrapType.Length; k++)
+            {
+                if (trap_pos[TrapType[k]] == des_pos)
+                {
+                    return des_pos;
+                }
+            }
+            return -1;
+        }        
+        
         if (start_pos == 5 && ((20 <= des_pos && des_pos <= 24) || des_pos == 27))
         {
             int caught_trap_pos = 31;
@@ -851,14 +866,13 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         int moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
         int des_caan_pos = int.Parse(des_caan.name);
-        int[] trap_pos = where_is_trap();
-        
+        int[] trap_pos = where_is_trap();        
         GameObject layover_caan = way_over(moving_mal_pos, des_caan_pos);
         int layover_pos = -1;
         if (layover_caan.name != "0")
             layover_pos = int.Parse(layover_caan.name);
 
-        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos);        
+        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos, moving_cnt);        
 
 
 
@@ -888,7 +902,7 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
         moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
-        caught_trap_pos = check_trap(moving_mal_pos, des_caan_pos, trap_pos);
+        caught_trap_pos = check_trap(moving_mal_pos, des_caan_pos, trap_pos, moving_cnt);
 
         Vector3 des_pos;
         if (caught_trap_pos == -1)
@@ -1360,6 +1374,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         IsEsp1Used = true;
         IsEsp1Using = false;
+        IsEspGoBackUsing = false;
     }
 
     [PunRPC]
@@ -1444,6 +1459,11 @@ public class InGame : MonoBehaviourPunCallbacks
                     haved = true;
                     break;
                 }
+                if (int.Parse(MalBox.transform.GetChild(t).GetChild(2).name) == 0 && k == 30)
+                {
+                    haved = true;
+                    break;
+                }
             }
             if (haved)
                 continue;
@@ -1523,8 +1543,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 master_esp1 = 9;
             if (slave_esp1 == 2)
                 slave_esp1 = 9;
-            PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);
-            
+
+            PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
 
@@ -1874,6 +1894,9 @@ public class InGame : MonoBehaviourPunCallbacks
         IsEsp1Using = false;
         IsEsp2Used = false;
         IsEsp2Using = false;
+        IsEspGoBackUsing = false;
+        IsEspIslandUsing = false;
+        IsEspKeepUsing = false;
         PopEsp.SetActive(false);
         PopEspUsing.SetActive(false);
         PopTurn.SetActive(false);
@@ -1890,6 +1913,12 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             ESPList.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
         }
+        MyEspList.transform.GetChild(1).GetChild(1).gameObject.SetActive(false);
+        MyEspList.transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
+        OpEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+        OpEspList.transform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+        OpEspList.transform.GetChild(1).GetComponent<Image>().sprite = ESP_sprite[18];
+        OpEspList.transform.GetChild(2).GetComponent<Image>().sprite = ESP_sprite[18];
         turn_on_off_all_caan(false);
         turn_on_off_all_moved_mal(false);
         on_off_caan_trap(1, false, -1);
