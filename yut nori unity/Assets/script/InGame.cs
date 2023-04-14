@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
@@ -25,6 +24,26 @@ public class InGame : MonoBehaviourPunCallbacks
                                             new Color(206 / 255f, 255 / 255f, 223 / 255f, 1f),
                                             new Color(200 / 255f, 200 / 255f, 200 / 255f, 0.5f),
                                             new Color(255 / 255f, 128 / 255f, 128 / 255f, 1f)};
+    private string[] EspTooltip = new string[] {
+                                                "밟으면 출발 이전으로 돌아가는 폭탄을 설치한다. 폭탄엔 피아구분이 없다. 지나쳐가도 발동한다.", //0. 콰광!
+                                                "상대방의 말 하나를 출발 이전으로 돌려보낸다. 쌓인 말이 있더라도 하나만 돌려보낸다.", //1. 안 돼. 돌아가.
+                                                "윷이 아닌 주사위를 굴린다.\n주사위를 2개를 굴리고, 나온 눈의 절반 (반올림) 만큼의 칸을 이동할 수 있다.\n더블이 나오면 1개를 더 굴린다.", //2. 서양문물
+                                                "상대 차례를 1번 건너뛴다.",//3. 무인도
+                                                "이번 차례에 던지는 윷을 모두 다음 차례에 사용한다.", //4. 킵이요.
+                                                "말을 하나 얹어서 출발한다.", //5. 부정출발
+                                                "상대 말 하나와 내 말 위치를 바꾼다.",//6. 초동역학위치전환기
+                                                "이번 차례에 처음 굴린 윷을 복사한다.",//7. 메타몽
+                                                "이번 차례에 던지는 윷을 모두 거꾸로 움직인다.", //8. 문워크
+                                                "밟으면 골인칸으로 들어가는 포탈을 설치한다. 포탈엔 피아구분이 없다. 지나쳐가도 발동한다.", //9. 집으로
+                                                "상대방의 능력을 따라한다. 상대방이 능력을 쓰기 전에도 사용할 수 있다.", //10. 따라큐
+                                                "상대방 말 하나를 골라 자신의 말 주위 3칸에 이동시킨다. 반대로도 가능하다.",// 11. 밀고 당기기
+                                                "이번 차례에 던지는 윷이 확정적으로 도가 된다.", //12. 신의손 도
+                                                "이번 차례에 던지는 윷이 확정적으로 개가 된다.", //13. 신의손 개
+                                                "이번 차례에 던지는 윷이 확정적으로 걸이 된다.", //14. 신의손 걸
+                                                "이번 차례에 던지는 윷이 확정적으로 윷이 된다.", //15. 신의손 윷
+                                                "이번 차례에 던지는 윷이 확정적으로 모가 된다.", //16. 신의손 모
+                                                "이번 차례에 던지는 윷이 확정적으로 뒷도가 된다." //17. 신의손 뒷도
+                                                };
 
     [Header("setting")]
     public GameObject MyInfoList;
@@ -82,6 +101,8 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject PopEsp;
     private GameObject ESPList;
     public GameObject PopEspUsing;
+    private GameObject MyEspTooltipBox;
+    private GameObject OpEspTooltipBox;
     public int MyEsp1;
     public int MyEsp2;
     public int OpEsp1;
@@ -1266,6 +1287,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
+
     #endregion
 
     #region Setting
@@ -1292,6 +1314,7 @@ public class InGame : MonoBehaviourPunCallbacks
         MyEspList = MyInfoList.transform.GetChild(4).gameObject;
         MyYutStackList = MyInfoList.transform.GetChild(5).gameObject;
         MyChatBubbleBox = MyInfoList.transform.GetChild(6).gameObject;
+        MyEspTooltipBox = MyInfoList.transform.GetChild(7).gameObject;
         MyChatBubble = MyChatBubbleBox.transform.GetChild(0).gameObject;
         MyMovingMal = MalBox.transform.GetChild(0).gameObject;
 
@@ -1302,6 +1325,7 @@ public class InGame : MonoBehaviourPunCallbacks
         OpEspList = OpInfoList.transform.GetChild(4).gameObject;
         OpYutStackList = OpInfoList.transform.GetChild(5).gameObject;
         OpChatBubbleBox = OpInfoList.transform.GetChild(6).gameObject;
+        OpEspTooltipBox = OpInfoList.transform.GetChild(7).gameObject;
         OpChatBubble = OpChatBubbleBox.transform.GetChild(0).gameObject;
         OpMovingMal = MalBox.transform.GetChild(1).gameObject;
 
@@ -1401,7 +1425,19 @@ public class InGame : MonoBehaviourPunCallbacks
         MyMovingMal.GetComponent<SpriteRenderer>().sprite = MyMalImage;
         OpMovingMal.GetComponent<SpriteRenderer>().sprite = OpMalImage;
         PopTurn.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = MyMalImage;
-        
+        MyEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(MyEsp1).GetChild(2).GetComponent<TMP_Text>().text;
+        MyEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[MyEsp1];
+        MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 37 + EspTooltip[MyEsp1].Length / 15 * 23);
+        MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + MyEsp2).GetChild(2).GetComponent<TMP_Text>().text +" ";
+        MyEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[MyEsp2];
+        MyEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + MyEsp2];
+
+        OpEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(OpEsp1).GetChild(2).GetComponent<TMP_Text>().text;
+        OpEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[OpEsp1];
+        OpEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 37 + EspTooltip[OpEsp1].Length / 15 * 23);
+        OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(ESPList.transform.childCount - 6 + OpEsp2).GetChild(2).GetComponent<TMP_Text>().text + " ";
+        OpEspTooltipBox.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text += YutHanguel[OpEsp2];
+        OpEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + OpEsp2];
     }
 
     IEnumerator Show_ESP_Choose(int esp1, int esp2)
