@@ -27,16 +27,16 @@ public class InGame : MonoBehaviourPunCallbacks
     private string[] EspTooltip = new string[] {
                                                 "밟으면 출발 이전으로 돌아가는 폭탄을 설치한다. 폭탄엔 피아구분이 없다. 지나쳐가도 발동한다.", //0. 콰광!
                                                 "상대방의 말 하나를 출발 이전으로 돌려보낸다. 쌓인 말이 있더라도 하나만 돌려보낸다.", //1. 안 돼. 돌아가.
-                                                "윷이 아닌 주사위를 굴린다.\n주사위를 2개를 굴리고, 나온 눈의 절반 (반올림) 만큼의 칸을 이동할 수 있다.\n더블이 나오면 1개를 더 굴린다.", //2. 서양문물
+                                                "윷이 아닌 주사위를 2개 굴린다. 각 주사위의 눈에 알맞는 윷으로 취급한다.(6은 뒷도) 더블이 나오면 한 번 더 굴린다.", //2. 서양문물
                                                 "상대 차례를 1번 건너뛴다.",//3. 무인도
                                                 "이번 차례에 던지는 윷을 모두 다음 차례에 사용한다. 킵한 윷은 다음턴에 윷을 굴려야 사용할 수 있다.", //4. 킵이요.
                                                 "말을 하나 얹어서 출발한다. 출발 가능한 말 2개 이상이 남아 있어야 활성화 가능하며, 활성화 후 윷을 굴리고 시작말을 움직이면 사용된다. 이미 나와져 있는 말을 움직이면 사용이 취소된다.", //5. 부정출발
-                                                "상대 말 하나와 내 말 위치를 바꾼다.",//6. 초동역학위치전환기
+                                                "상대의 말 하나와 내 말하나의 위치를 바꾼다. 쌓인 말이 있으면 모두 바뀐다.",//6. 초동역학위치전환기
                                                 "이번 차례에 처음 굴린 윷을 복사한다.",//7. 메타몽
                                                 "이번 차례에 던지는 윷을 모두 거꾸로 움직인다.", //8. 문워크
                                                 "밟으면 골인칸으로 들어가는 포탈을 설치한다. 포탈엔 피아구분이 없다. 지나쳐가도 발동한다.", //9. 집으로
                                                 "상대방의 능력을 따라한다. 상대방이 능력을 쓰기 전에도 사용할 수 있다.", //10. 따라큐
-                                                "상대방 말 하나를 골라 자신의 말 주위 3칸에 이동시킨다. 반대로도 가능하다.",// 11. 밀고 당기기
+                                                "상대방 말 하나를 골라 자신의 말 주위 2칸에 이동시킨다. 반대로도 가능하다.",// 11. 밀고 당기기
                                                 "이번 차례에 던지는 윷이 확정적으로 도가 된다.", //12. 신의손 도
                                                 "이번 차례에 던지는 윷이 확정적으로 개가 된다.", //13. 신의손 개
                                                 "이번 차례에 던지는 윷이 확정적으로 걸이 된다.", //14. 신의손 걸
@@ -1853,10 +1853,10 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             
-            int master_esp1 = Random.Range(0, 5);
-            int slave_esp1 = Random.Range(0, 5);
+            int master_esp1 = Random.Range(0, 8);
+            int slave_esp1 = Random.Range(0, 8);
             while (master_esp1 == slave_esp1)
-                master_esp1 = Random.Range(0, 12);
+                master_esp1 = Random.Range(0, 8);
 
             int master_esp2 = Random.Range(0, 6);
             int slave_esp2 = Random.Range(0, 6);
@@ -1867,7 +1867,6 @@ public class InGame : MonoBehaviourPunCallbacks
                 master_esp1 = 9;
             if (slave_esp1 == 2)
                 slave_esp1 = 9;
-            master_esp1 = 6;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
