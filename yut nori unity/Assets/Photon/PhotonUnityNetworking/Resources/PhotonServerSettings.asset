@@ -64,6 +64,10 @@ MonoBehaviour:
   - start_game_in_room
   - island
   - use_go_back
+  - use_false_start
+  - use_metamong
+  - use_island
+  - use_change_pos
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
