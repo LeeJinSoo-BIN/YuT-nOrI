@@ -123,6 +123,7 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEspFalseStartUsing = false;
     private bool IsEspMetamongUsing = false;
     private bool IsEspChangePosUsing = false;
+    private bool IsEspMagnetUsing = false;
     private int EspChangeIndex1 = -1;
     private int EspChangeIndex2 = -1;
 
@@ -192,7 +193,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         }
                     }
                 }
-                if ((IsEspGoBackUsing  || IsEspChangePosUsing) && !IsEsp1Used)
+                if ((IsEspGoBackUsing  || IsEspChangePosUsing || IsEspMagnetUsing) && !IsEsp1Used)
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
@@ -1496,6 +1497,65 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
+    void click_magnet()
+    {
+        if (IsEsp1Using)
+        {
+            int op_mal_cnt = 0;
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (MalBox.transform.GetChild(k).name[0] == 'O')
+                {
+                    op_mal_cnt++;
+                    break;
+                }
+            }
+            int my_mal_cnt = 0;
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (MalBox.transform.GetChild(k).name[0] == 'M')
+                {
+                    my_mal_cnt++;
+                    break;
+                }
+            }
+            if (op_mal_cnt != 0 && my_mal_cnt != 0)
+            {
+                for (int k = 2; k < MalBox.transform.childCount; k++)
+                {
+                    if (MalBox.transform.GetChild(k).name[0] == 'M')
+                    {
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                        MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
+                    }
+                }
+                IsEspMagnetUsing = true;
+            }
+            else
+            {
+                IsEsp1Using = false;
+                IsEspMagnetUsing = false;
+            }
+        }
+        else
+        {
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
+                MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+            }
+            EspChangeIndex1 = -1;
+            EspChangeIndex2 = -1;
+            MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+            IsEspMagnetUsing = false;
+        }
+    }
+
+
     void OpMalClick(GameObject clicked_mal)
     {
         if (IsEspGoBackUsing)
@@ -1519,7 +1579,7 @@ public class InGame : MonoBehaviourPunCallbacks
             IsEsp1Using = false;
             IsEspGoBackUsing = false;
         }
-        if (IsEspChangePosUsing)
+        if (IsEspChangePosUsing && EspChangeIndex1 != -1)
         {
             for (int k = 2; k < MalBox.transform.childCount; k++)
             {
@@ -1562,17 +1622,16 @@ public class InGame : MonoBehaviourPunCallbacks
                 break;
             }
         }
-        if(IsEspChangePosUsing && EspChangeIndex1 == clicked_mal_index && EspChangeIndex1 != -1)
+        if (IsEspChangePosUsing && EspChangeIndex1 == clicked_mal_index && EspChangeIndex1 != -1)
         {
-            print("clicked same mal");
             IsEsp1Using = false;
             click_change_pos();
             IsEsp1Using = true;
             click_change_pos();
             return;
         }
-        if (IsEspChangePosUsing && EspChangeIndex1 == -1)
-        {            
+        else if ((IsEspChangePosUsing || IsEspMagnetUsing) && EspChangeIndex1 == -1)
+        {
             for (int k = 2; k < MalBox.transform.childCount; k++)
             {
                 if (MalBox.transform.GetChild(k).gameObject == clicked_mal)
@@ -1606,6 +1665,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 }
             }
         }
+
+
     }
 
 
@@ -1631,6 +1692,8 @@ public class InGame : MonoBehaviourPunCallbacks
         moving_mal2.transform.GetChild(2).GetComponent<TMP_Text>().text = moving_mal1_pos;
         moving_mal2.transform.GetChild(2).name = moving_mal1_pos;
         StartCoroutine(esp_change_pos(moving_mal1, moving_mal2));
+        EspChangeIndex1 = -1;
+        EspChangeIndex2 = -1;
     }
     IEnumerator esp_change_pos(GameObject moving_mal1, GameObject moving_mal2)
     {
@@ -1712,6 +1775,7 @@ public class InGame : MonoBehaviourPunCallbacks
         StartCoroutine(show_esp_used(esp_stack, ment, false));
     }
 
+    
 
     void click_false_start()
     {
