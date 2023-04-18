@@ -1,10 +1,10 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using Photon.Pun;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class InGame : MonoBehaviourPunCallbacks
 {
@@ -124,9 +124,9 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEspMetamongUsing = false;
     private bool IsEspChangePosUsing = false;
     private bool IsEspMagnetUsing = false;
-    private int EspChangeIndex1 = -1;
-    private int EspChangeIndex2 = -1;
-
+    public int EspChangeIndex1 = -1;
+    public int EspChangeIndex2 = -1;
+    public int EspMagnetMovingMalIndex = -1;
 
     [Header("Turn")]
     public GameObject PopTurn;
@@ -472,7 +472,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
     #endregion
 
-    #region Move
+     #region Move
     public void MyStartMalClick()
     {
         if (IsMyMovedMalClicked)
@@ -644,10 +644,14 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         if (EventSystem.current.currentSelectedGameObject == null)
             return;
-        
         GameObject current_clicked_caan = EventSystem.current.currentSelectedGameObject;
         print(current_clicked_caan.name);
         int clicked_caan_num = int.Parse(current_clicked_caan.name);
+        if (IsEspMagnetUsing)
+        {
+            PV.RPC("use_magnet", RpcTarget.All, EspMagnetMovingMalIndex, clicked_caan_num);            
+            return;
+        }        
         int moving_yut = int.Parse(current_clicked_caan.transform.GetChild(0).GetChild(0).name);
         if (IsMyStartMalClicked)
         {
@@ -1338,6 +1342,8 @@ public class InGame : MonoBehaviourPunCallbacks
             case 10: // 따라큐
                 break;
             case 11: // 밀당
+                click_magnet();
+                MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
         }
     }
@@ -1501,6 +1507,8 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         if (IsEsp1Using)
         {
+            EspChangeIndex1 = -1;
+            EspChangeIndex2 = -1;
             int op_mal_cnt = 0;
             for (int k = 2; k < MalBox.transform.childCount; k++)
             {
@@ -1523,18 +1531,16 @@ public class InGame : MonoBehaviourPunCallbacks
             {
                 for (int k = 2; k < MalBox.transform.childCount; k++)
                 {
-                    if (MalBox.transform.GetChild(k).name[0] == 'M')
-                    {
-                        MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
-                        MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
-                        MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
-                        MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
-                    }
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                    MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
                 }
                 IsEspMagnetUsing = true;
             }
             else
             {
+                turn_on_off_all_caan(false);
                 IsEsp1Using = false;
                 IsEspMagnetUsing = false;
             }
@@ -1595,19 +1601,79 @@ public class InGame : MonoBehaviourPunCallbacks
                 {
                     MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
                     MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
-                    MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);                    
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
                 }
                 else
                 {
                     MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
                 }
             }
-            if(EspChangeIndex1 != -1 && EspChangeIndex2 != -1)
+            if (EspChangeIndex1 != -1 && EspChangeIndex2 != -1)
             {
                 PV.RPC("use_change_pos", RpcTarget.All, EspChangeIndex1, EspChangeIndex2);
-                IsEsp1Used = true;                
+                IsEsp1Used = true;
                 IsEsp1Using = false;
                 IsEspChangePosUsing = false;
+            }
+        }
+        else if (IsEspMagnetUsing)
+        {
+            int clicked_mal_index = -1;
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (MalBox.transform.GetChild(k).gameObject == clicked_mal)
+                {
+                    clicked_mal_index = k;
+                    break;
+                }
+            }
+            if (EspChangeIndex2 == clicked_mal_index && EspChangeIndex2 != -1)
+            {
+                turn_on_off_all_caan(false);
+                EspChangeIndex2 = -1;
+                if (EspChangeIndex1 == -1)
+                {
+                    IsEsp1Using = false;
+                    click_magnet();
+                    IsEsp1Using = true;
+                    click_magnet();
+                }
+                else
+                {
+                    for (int k = 2; k < MalBox.transform.childCount; k++)
+                    {
+                        if (MalBox.transform.GetChild(k).name[0] == 'O')
+                        {
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
+                        }
+                    }
+                }
+                
+            }
+            else if (EspChangeIndex2 == -1)
+            {
+                EspChangeIndex2 = clicked_mal_index;
+                for (int k = 2; k < MalBox.transform.childCount; k++)
+                {
+                    if (k == EspChangeIndex2)
+                    {
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                    }
+                    else
+                    {
+                        if (MalBox.transform.GetChild(k).name[0] == 'O')
+                            MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
+                    }
+                    if (EspChangeIndex1 != -1)
+                    {
+                        activate_magnet_caan(EspChangeIndex2);
+                    }
+                }
             }
         }
     }
@@ -1622,24 +1688,47 @@ public class InGame : MonoBehaviourPunCallbacks
                 break;
             }
         }
-        if (IsEspChangePosUsing && EspChangeIndex1 == clicked_mal_index && EspChangeIndex1 != -1)
+        if (EspChangeIndex1 == clicked_mal_index && EspChangeIndex1 != -1)
         {
-            IsEsp1Using = false;
-            click_change_pos();
-            IsEsp1Using = true;
-            click_change_pos();
+            
+            if (IsEspMagnetUsing)
+            {
+                turn_on_off_all_caan(false);
+                EspChangeIndex1 = -1;
+                if (EspChangeIndex2 == -1)
+                {
+                    IsEsp1Using = false;
+                    click_magnet();
+                    IsEsp1Using = true;
+                    click_magnet();
+                }
+                else
+                {                    
+                    for(int k = 2; k< MalBox.transform.childCount; k++)
+                    {
+                        if(MalBox.transform.GetChild(k).name[0] == 'M')
+                        {
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
+                            MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
+                        }
+                    }
+                }
+                return;
+            }
+            else if (IsEspChangePosUsing)
+            {
+                IsEsp1Using = false;
+                click_change_pos();
+                IsEsp1Using = true;
+                click_change_pos();
+            }   
             return;
         }
-        else if ((IsEspChangePosUsing || IsEspMagnetUsing) && EspChangeIndex1 == -1)
+        else if (IsEspChangePosUsing && EspChangeIndex1 == -1)
         {
-            for (int k = 2; k < MalBox.transform.childCount; k++)
-            {
-                if (MalBox.transform.GetChild(k).gameObject == clicked_mal)
-                {
-                    EspChangeIndex1 = k;
-                    break;
-                }
-            }
+            EspChangeIndex1 = clicked_mal_index;
             for (int k = 2; k < MalBox.transform.childCount; k++)
             {
                 if (k == EspChangeIndex1)
@@ -1666,6 +1755,29 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
 
+        else if (IsEspMagnetUsing && EspChangeIndex1 == -1)
+        {
+            EspChangeIndex1 = clicked_mal_index;
+            for (int k = 2; k < MalBox.transform.childCount; k++)
+            {
+                if (k == EspChangeIndex1)
+                {
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                    MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
+                }
+                else
+                {
+                    if(MalBox.transform.GetChild(k).name[0] == 'M')
+                        MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(false);
+                }
+                if(EspChangeIndex2 != -1)
+                {
+                    activate_magnet_caan(EspChangeIndex1);
+                }
+            }
+            
+        }
 
     }
 
@@ -1775,7 +1887,15 @@ public class InGame : MonoBehaviourPunCallbacks
         StartCoroutine(show_esp_used(esp_stack, ment, false));
     }
 
-    
+    [PunRPC]
+    void use_magnet(int moving_mal, int des_caan)
+    {
+        Esp1Used();
+        int[] esp_stack = { 11 };
+        string[] ment = { "밀고 당기기!" };
+        show_esp_used(esp_stack, ment, false);
+
+    }
 
     void click_false_start()
     {
@@ -1829,6 +1949,80 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
+    void activate_magnet_caan(int mal_idx)
+    {
+        turn_on_off_all_caan(false);
+        int pos = int.Parse(MalBox.transform.GetChild(mal_idx).GetChild(2).name);
+        int front = pos + 1;
+        int back = pos - 1;
+        int side1 = -1;
+        int side2 = -1;
+        if (pos == 5)
+            side1 = 20;
+        else if (pos == 10)
+            side1 = 25;
+        else if (pos == 15)
+            side1 = 24;
+        else if (pos == 0 || pos == 30)
+        {
+            front = 1;
+            back = 19;
+            side1 = 29;
+        }
+        else if (pos == 20)
+            back = 5;
+        else if (pos == 24)
+            front = 15;        
+        else if (pos == 25)        
+            back = 10;        
+        else if (pos == 27)
+        {            
+            side1 = 21;
+            side2 = 23;
+        }
+        
+        for(int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            int current_mal_pos = int.Parse(MalBox.transform.GetChild(k).GetChild(2).name);
+            if (current_mal_pos == front && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+                front = -1;
+            else if (current_mal_pos == back && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+                back = -1;
+            else if (current_mal_pos == side1 && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+                side1 = -1;
+            if (current_mal_pos == side2 && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+                side2 = -1;
+        }
+
+        if (front != -1)
+        {
+            Caan.transform.GetChild(front).GetComponent<Button>().interactable = true;
+            Caan.transform.GetChild(front).GetChild(0).gameObject.SetActive(true);
+            Caan.transform.GetChild(front).GetChild(0).GetComponent<Image>().color = new Color(255 / 255f, 0 / 255f, 255 / 255f, 1f);
+            Caan.transform.GetChild(front).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "밀당!";
+        }
+        if (back != -1)
+        {
+            Caan.transform.GetChild(back).GetComponent<Button>().interactable = true;
+            Caan.transform.GetChild(back).GetChild(0).gameObject.SetActive(true);
+            Caan.transform.GetChild(back).GetChild(0).GetComponent<Image>().color = new Color(255 / 255f, 0 / 255f, 255 / 255f, 1f);
+            Caan.transform.GetChild(back).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "밀당!";
+        }
+        if (side1 != -1)
+        {
+            Caan.transform.GetChild(side1).GetComponent<Button>().interactable = true;
+            Caan.transform.GetChild(side1).GetChild(0).gameObject.SetActive(true);
+            Caan.transform.GetChild(side1).GetChild(0).GetComponent<Image>().color = new Color(255 / 255f, 0 / 255f, 255 / 255f, 1f);
+            Caan.transform.GetChild(side1).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "밀당!";
+        }
+        if (side2 != -1)
+        {
+            Caan.transform.GetChild(side2).GetComponent<Button>().interactable = true;
+            Caan.transform.GetChild(side2).GetChild(0).gameObject.SetActive(true);
+            Caan.transform.GetChild(side2).GetChild(0).GetComponent<Image>().color = new Color(255 / 255f, 0 / 255f, 255 / 255f, 1f);
+            Caan.transform.GetChild(side2).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "밀당!";
+        }
+    }
     void on_off_caan_trap(int trap_type, bool on, int exept_num) // trap type 1 == bomb, 2==home
     {
         for (int k = 1; k < Caan.transform.childCount; k++)
@@ -1931,6 +2125,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 master_esp1 = 9;
             if (slave_esp1 == 2)
                 slave_esp1 = 9;
+            master_esp1 = 11;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
@@ -2287,6 +2482,7 @@ public class InGame : MonoBehaviourPunCallbacks
         IsEspFalseStartUsing = false;
         IsEspMetamongUsing = false;
         IsEspChangePosUsing = false;
+        IsEspMagnetUsing = false;
         PopEsp.SetActive(false);
         PopEspUsing.SetActive(false);
         PopTurn.SetActive(false);
