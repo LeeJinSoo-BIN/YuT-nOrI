@@ -68,6 +68,7 @@ MonoBehaviour:
   - use_metamong
   - use_island
   - use_change_pos
+  - use_magnet
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

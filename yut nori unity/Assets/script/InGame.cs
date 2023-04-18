@@ -649,7 +649,8 @@ public class InGame : MonoBehaviourPunCallbacks
         int clicked_caan_num = int.Parse(current_clicked_caan.name);
         if (IsEspMagnetUsing)
         {
-            PV.RPC("use_magnet", RpcTarget.All, EspMagnetMovingMalIndex, clicked_caan_num);            
+            if (EspMagnetMovingMalIndex != -1)
+                PV.RPC("use_magnet", RpcTarget.All, EspMagnetMovingMalIndex, clicked_caan_num);            
             return;
         }        
         int moving_yut = int.Parse(current_clicked_caan.transform.GetChild(0).GetChild(0).name);
@@ -1788,15 +1789,9 @@ public class InGame : MonoBehaviourPunCallbacks
         int[] esp = { 6 };
         string[] ment = { "초동역학 위치전환기!" };
         StartCoroutine(show_esp_used(esp, ment, false));
-        GameObject moving_mal1 = null;
-        GameObject moving_mal2 = null;
-        for (int k = 2; k < MalBox.transform.childCount; k++)
-        {
-            if (k == change_index1)
-                moving_mal1 = MalBox.transform.GetChild(k).gameObject;
-            if (k == change_index2)
-                moving_mal2 = MalBox.transform.GetChild(k).gameObject;
-        }
+        GameObject moving_mal1 = MalBox.transform.GetChild(change_index1).gameObject;
+        GameObject moving_mal2 = MalBox.transform.GetChild(change_index2).gameObject;
+
         string moving_mal1_pos = moving_mal1.transform.GetChild(2).GetComponent<TMP_Text>().text;
         string moving_mal2_pos = moving_mal2.transform.GetChild(2).GetComponent<TMP_Text>().text;
         moving_mal1.transform.GetChild(2).GetComponent<TMP_Text>().text = moving_mal2_pos;
@@ -1886,15 +1881,63 @@ public class InGame : MonoBehaviourPunCallbacks
         string[] ment = { "안 돼. 돌아가." };
         StartCoroutine(show_esp_used(esp_stack, ment, false));
     }
-
+    
     [PunRPC]
-    void use_magnet(int moving_mal, int des_caan)
+    void use_magnet(int moving_mal_index, int des_caan_index)
     {
         Esp1Used();
         int[] esp_stack = { 11 };
         string[] ment = { "밀고 당기기!" };
-        show_esp_used(esp_stack, ment, false);
-
+        show_esp_used(esp_stack, ment, false);        
+        GameObject moving_mal = MalBox.transform.GetChild(moving_mal_index).gameObject;
+        GameObject des_caan = Caan.transform.GetChild(des_caan_index).gameObject;
+        StartCoroutine(esp_magnet(moving_mal, des_caan));
+        EspChangeIndex1 = -1;
+        EspChangeIndex2 = -1;
+        IsEsp1Used = true;
+        IsEsp1Using = false;
+        IsEspMagnetUsing = false;
+    }
+    IEnumerator esp_magnet(GameObject moving_mal, GameObject des_caan)
+    {
+        Vector3 des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
+        float waiting = 0f;
+        while (true)
+        {
+            waiting += Time.deltaTime;
+            if (waiting > 0.5f)
+                break;
+            yield return null;
+        }
+        while (true)
+        {
+            moving_mal.transform.position = Vector2.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
+            if ((Vector2.SqrMagnitude(moving_mal.transform.position - des_pos) < 0.0001))
+                
+            {
+                des_pos.z = 1f;
+                moving_mal.transform.position = des_pos;
+                break;
+            }
+            yield return null;
+        }
+        string des_caan_num = des_caan.name;
+        for(int k = 2; k < MalBox.transform.childCount; k++)
+        {
+            if (MalBox.transform.GetChild(k).GetChild(2).name == des_caan_num && MalBox.transform.GetChild(k).name[0] == moving_mal.name[0])
+            {
+                int cnt1 = int.Parse(moving_mal.transform.GetChild(1).GetComponent<TMP_Text>().text);
+                int cnt2 = int.Parse(MalBox.transform.GetChild(k).GetChild(1).GetComponent<TMP_Text>().text);
+                moving_mal.transform.GetChild(1).GetComponent<TMP_Text>().text = (cnt1 + cnt2).ToString();
+                moving_mal.transform.GetChild(0).gameObject.SetActive(true);
+                Destroy(MalBox.transform.GetChild(k).gameObject);
+            }
+        }
+        if (MyTurn)
+        {
+            IsEsp1Using = false;
+            click_magnet();
+        }
     }
 
     void click_false_start()
@@ -1940,7 +1983,7 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             MyEspList.transform.GetChild(1).GetComponent<Button>().interactable = false;
             MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
-            MyEspList.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
+            MyEspList.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);            
         }
         else
         {
@@ -2021,6 +2064,14 @@ public class InGame : MonoBehaviourPunCallbacks
             Caan.transform.GetChild(side2).GetChild(0).gameObject.SetActive(true);
             Caan.transform.GetChild(side2).GetChild(0).GetComponent<Image>().color = new Color(255 / 255f, 0 / 255f, 255 / 255f, 1f);
             Caan.transform.GetChild(side2).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "밀당!";
+        }
+        if(front == -1 && back == -1 && side1 == -1 && side2 == -1)
+        {
+            EspMagnetMovingMalIndex = -1;
+        }
+        else
+        {
+            EspMagnetMovingMalIndex = mal_idx == EspChangeIndex1 ? EspChangeIndex1 : EspChangeIndex2;
         }
     }
     void on_off_caan_trap(int trap_type, bool on, int exept_num) // trap type 1 == bomb, 2==home
