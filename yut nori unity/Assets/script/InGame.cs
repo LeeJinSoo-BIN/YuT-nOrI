@@ -36,7 +36,7 @@ public class InGame : MonoBehaviourPunCallbacks
                                                 "이번 차례에 던지는 윷을 모두 거꾸로 움직인다.", //8. 문워크
                                                 "밟으면 골인칸으로 들어가는 포탈을 설치한다. 포탈엔 피아구분이 없다. 지나쳐가도 발동한다.", //9. 집으로
                                                 "상대방의 능력을 따라한다. 상대방이 능력을 쓰기 전에도 사용할 수 있다.", //10. 따라큐
-                                                "상대방 말 하나를 골라 자신의 말 주위 2칸에 이동시킨다. 반대로도 가능하다.",// 11. 밀고 당기기
+                                                "상대방 말 하나를 골라 자신의 말 주위 1칸에 이동시킨다. 반대로도 가능하다. 먼저 선택한 말을 두번째 선택한 말의 주위로 이동시킨다. 이동 시키려는 곳에 말이 있다면, 자신의 말 위에만 이동 가능하다.",// 11. 밀고 당기기
                                                 "이번 차례에 던지는 윷이 확정적으로 도가 된다.", //12. 신의손 도
                                                 "이번 차례에 던지는 윷이 확정적으로 개가 된다.", //13. 신의손 개
                                                 "이번 차례에 던지는 윷이 확정적으로 걸이 된다.", //14. 신의손 걸
@@ -1314,7 +1314,6 @@ public class InGame : MonoBehaviourPunCallbacks
             case 1: // 안돼 돌아가                
                 click_go_back();
                 MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
-
                 break;
             case 2: // 서양 문물
                 break;
@@ -1555,6 +1554,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
                 MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(255 / 255f, 117 / 255f, 138 / 255f, 1f);
             }
+            turn_on_off_all_caan(false);
             EspChangeIndex1 = -1;
             EspChangeIndex2 = -1;
             MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(false);
@@ -1672,7 +1672,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     }
                     if (EspChangeIndex1 != -1)
                     {
-                        activate_magnet_caan(EspChangeIndex2);
+                        activate_magnet_caan(EspChangeIndex1 ,EspChangeIndex2);
                     }
                 }
             }
@@ -1774,7 +1774,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 }
                 if(EspChangeIndex2 != -1)
                 {
-                    activate_magnet_caan(EspChangeIndex1);
+                    activate_magnet_caan(EspChangeIndex2, EspChangeIndex1);
                 }
             }
             
@@ -1930,6 +1930,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 int cnt2 = int.Parse(MalBox.transform.GetChild(k).GetChild(1).GetComponent<TMP_Text>().text);
                 moving_mal.transform.GetChild(1).GetComponent<TMP_Text>().text = (cnt1 + cnt2).ToString();
                 moving_mal.transform.GetChild(0).gameObject.SetActive(true);
+                moving_mal.transform.GetChild(1).gameObject.SetActive(true);
                 Destroy(MalBox.transform.GetChild(k).gameObject);
             }
         }
@@ -1992,51 +1993,64 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
-    void activate_magnet_caan(int mal_idx)
+    void activate_magnet_caan(int moving_mal_idx, int des_mal_idx)
     {
         turn_on_off_all_caan(false);
-        int pos = int.Parse(MalBox.transform.GetChild(mal_idx).GetChild(2).name);
-        int front = pos + 1;
-        int back = pos - 1;
+        int moving_pos = int.Parse(MalBox.transform.GetChild(moving_mal_idx).GetChild(2).name);
+        int des_pos = int.Parse(MalBox.transform.GetChild(des_mal_idx).GetChild(2).name);        
+        int front = des_pos + 1;
+        int back = des_pos - 1;
         int side1 = -1;
         int side2 = -1;
-        if (pos == 5)
+        if (des_pos == 5)
             side1 = 20;
-        else if (pos == 10)
+        else if (des_pos == 10)
             side1 = 25;
-        else if (pos == 15)
+        else if (des_pos == 15)
             side1 = 24;
-        else if (pos == 0 || pos == 30)
+        else if (des_pos == 0 || des_pos == 30)
         {
             front = 1;
             back = 19;
             side1 = 29;
         }
-        else if (pos == 20)
+        else if (des_pos == 20)
             back = 5;
-        else if (pos == 24)
+        else if (des_pos == 24)
             front = 15;        
-        else if (pos == 25)        
+        else if (des_pos == 25)        
             back = 10;        
-        else if (pos == 27)
+        else if (des_pos == 27)
         {            
             side1 = 21;
             side2 = 23;
         }
-        
-        for(int k = 2; k < MalBox.transform.childCount; k++)
+        print("from " + moving_pos + " to " + des_pos + " : " + front + " " + back + " " + side1 + " " + side2);
+        for (int k = 2; k < MalBox.transform.childCount; k++)
         {
             int current_mal_pos = int.Parse(MalBox.transform.GetChild(k).GetChild(2).name);
-            if (current_mal_pos == front && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+            if (current_mal_pos == front && (MalBox.transform.GetChild(k).name[0] == 'O' || k == moving_mal_idx)) 
+            {
+                print("front " + k + " " + current_mal_pos + " " + MalBox.transform.GetChild(k).name);
                 front = -1;
-            else if (current_mal_pos == back && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+            }
+            else if (current_mal_pos == back && (MalBox.transform.GetChild(k).name[0] == 'O' || k == moving_mal_idx))
+            {
+                print("back " + k + " " + current_mal_pos + " " + MalBox.transform.GetChild(k).name);
                 back = -1;
-            else if (current_mal_pos == side1 && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+            }
+            else if (current_mal_pos == side1 && (MalBox.transform.GetChild(k).name[0] == 'O' || k == moving_mal_idx))
+            {
+                print("sdie1 " + k + " " + current_mal_pos + " " + MalBox.transform.GetChild(k).name);
                 side1 = -1;
-            if (current_mal_pos == side2 && MalBox.transform.GetChild(k).name[0] != MalBox.transform.GetChild(mal_idx).name[0])
+            }
+            else if (current_mal_pos == side2 && (MalBox.transform.GetChild(k).name[0] == 'O' || k == moving_mal_idx))
+            {
+                print("sdie2 " + k + " " + current_mal_pos + " " + MalBox.transform.GetChild(k).name);
                 side2 = -1;
+            }
         }
-
+        print("from " + moving_pos + " to " + des_pos + " : " + front + " " + back + " " + side1 + " " + side2);
         if (front != -1)
         {
             Caan.transform.GetChild(front).GetComponent<Button>().interactable = true;
@@ -2068,10 +2082,13 @@ public class InGame : MonoBehaviourPunCallbacks
         if(front == -1 && back == -1 && side1 == -1 && side2 == -1)
         {
             EspMagnetMovingMalIndex = -1;
+            IsEspMagnetUsing = false;
+            IsEsp1Using = false;
+            click_magnet();
         }
         else
         {
-            EspMagnetMovingMalIndex = mal_idx == EspChangeIndex1 ? EspChangeIndex1 : EspChangeIndex2;
+            EspMagnetMovingMalIndex = moving_mal_idx;
         }
     }
     void on_off_caan_trap(int trap_type, bool on, int exept_num) // trap type 1 == bomb, 2==home
@@ -2162,10 +2179,10 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             
-            int master_esp1 = Random.Range(0, 8);
-            int slave_esp1 = Random.Range(0, 8);
+            int master_esp1 = Random.Range(0, 9);
+            int slave_esp1 = Random.Range(0, 9);
             while (master_esp1 == slave_esp1)
-                master_esp1 = Random.Range(0, 8);
+                master_esp1 = Random.Range(0, 9);
 
             int master_esp2 = Random.Range(0, 6);
             int slave_esp2 = Random.Range(0, 6);
@@ -2174,9 +2191,12 @@ public class InGame : MonoBehaviourPunCallbacks
 
             if (master_esp1 == 2)
                 master_esp1 = 9;
+            else if (master_esp1 == 8)
+                master_esp1 = 11;
             if (slave_esp1 == 2)
                 slave_esp1 = 9;
-            master_esp1 = 11;
+            else if (slave_esp1 == 8)
+                slave_esp1 = 11;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
