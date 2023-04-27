@@ -15,6 +15,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public Sprite[] YutAnimal;
     public Sprite[] Ganzi;
     public Sprite[] ESP_sprite;
+    public Sprite[] Esp_Dice_sprite;
     private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!", "µµÂø!" };
     private Color[] YutColor = new Color[] { new Color(255 / 255f, 223 / 255f, 206 / 255f, 1f),
                                             new Color(255 / 255f, 170 / 255f, 90 / 255f, 1f),
@@ -124,9 +125,13 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEspMetamongUsing = false;
     private bool IsEspChangePosUsing = false;
     private bool IsEspMagnetUsing = false;
-    public int EspChangeIndex1 = -1;
-    public int EspChangeIndex2 = -1;
-    public int EspMagnetMovingMalIndex = -1;
+    private int EspChangeIndex1 = -1;
+    private int EspChangeIndex2 = -1;
+    private int EspMagnetMovingMalIndex = -1;
+    public bool EspMimikyuUsing = false;
+    public bool EspMimikyuUsed = false;
+
+
 
     [Header("Turn")]
     public GameObject PopTurn;
@@ -1502,6 +1507,8 @@ public class InGame : MonoBehaviourPunCallbacks
             IsEspChangePosUsing = false;
         }
     }
+
+    
 
     void click_magnet()
     {
