@@ -2088,7 +2088,9 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             IsEsp1Using = false;
             click_change_pos();
+            IsEsp1Used = true;
         }
+        PV.RPC("Esp1Used", RpcTarget.All);
     }
     [PunRPC]
     void use_go_back(int mal_num)
