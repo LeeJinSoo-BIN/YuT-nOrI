@@ -70,6 +70,7 @@ MonoBehaviour:
   - use_change_pos
   - use_magnet
   - roll_dice
+  - use_mimikyu
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

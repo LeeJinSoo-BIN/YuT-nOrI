@@ -23340,8 +23340,8 @@ MonoBehaviour:
   EspPopSlowDown: 1.2
   IsEspIslandUsing: 0
   IsEspDiceUsing: 0
-  EspMimikyuUsing: 0
-  EspMimikyuUsed: 0
+  IsEspMimikyuUsing: 0
+  IsEspMimikyuUsed: 0
   PopTurn: {fileID: 1991796095}
   ShowPopTime: 0.5
   VenishPopSpeed: 3
@@ -40445,7 +40445,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1289106174
 RectTransform:
   m_ObjectHideFlags: 0

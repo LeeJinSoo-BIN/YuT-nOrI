@@ -130,9 +130,9 @@ public class InGame : MonoBehaviourPunCallbacks
     private int EspChangeIndex1 = -1;
     private int EspChangeIndex2 = -1;
     private int EspMagnetMovingMalIndex = -1;
-    public bool EspMimikyuUsing = false;
-    public bool EspMimikyuUsed = false;
-
+    public bool IsEspMimikyuUsing = false;
+    public bool IsEspMimikyuUsed = false;
+    private bool WhoUsedMimikyu;
 
 
     [Header("Turn")]
@@ -307,6 +307,8 @@ public class InGame : MonoBehaviourPunCallbacks
             }
             else
             {
+                if (IsEspMimikyuUsing)
+                    IsEsp1Using = false;
                 Esp1ButtonClick();
             }
         }
@@ -401,7 +403,7 @@ public class InGame : MonoBehaviourPunCallbacks
             while (true)
             {
                 timer += Time.deltaTime;
-                if (timer >= (ShowPopTime+0.5f))
+                if (timer >= (ShowPopTime * 2))
                 {
                     break;
                 }
@@ -528,8 +530,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 stack_up = 2;
                 if (MyTurn)
                     IsEsp1Used = true;
-                int[] esp_stack = { 7, 7 };
-                string[] ment = { "메타몽", "메타몽" };
+                int[] esp_stack = { 7 };
+                string[] ment = { "메타몽" };
                 StartCoroutine(show_esp_used(esp_stack, ment, false));
                 Esp1Used();
             }
@@ -1486,6 +1488,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 on_off_caan_trap(2, IsEsp1Using, -1);
                 break;
             case 10: // 따라큐
+                click_mimikyu();
+                MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
             case 11: // 밀당
                 click_magnet();
@@ -1515,9 +1519,41 @@ public class InGame : MonoBehaviourPunCallbacks
         on_off_caan_trap(trap_type, false, trap_pos);
     }
 
-    IEnumerator show_esp_used(int[] esp_stack, string[] ment, bool end)
+    IEnumerator show_esp_used(int[] src_esp_stack, string[] src_ment, bool end)
     {
-
+        int[] esp_stack = null;
+        esp_stack = new int[src_esp_stack.Length];
+        src_esp_stack.CopyTo(esp_stack, 0);
+        string[] ment;
+        ment = new string[src_ment.Length];
+        src_ment.CopyTo(ment, 0);
+        if(src_esp_stack[0] == 7)
+        {
+            float turn_show_time = 0;
+            while (true)
+            {
+                turn_show_time += Time.deltaTime;
+                if (turn_show_time >= RollingTime)
+                {
+                    break;
+                }
+                yield return null;
+            }
+        }
+        if (IsEspMimikyuUsed)
+        {
+            if ((MyTurn && (WhoUsedMimikyu == PhotonNetwork.IsMasterClient)) || (!MyTurn && (WhoUsedMimikyu != PhotonNetwork.IsMasterClient)))
+            {
+                esp_stack = new int[src_esp_stack.Length + 1];
+                src_esp_stack.CopyTo(esp_stack, 1);
+                ment = new string[src_ment.Length + 1];
+                src_ment.CopyTo(ment, 1);
+                esp_stack[0] = 10;
+                ment[0] = "따라큐";
+            }
+        }
+        
+        
         for (int k = 0; k < esp_stack.Length; k++)
         {
             PopEspUsing.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = ESP_sprite[esp_stack[k]];
@@ -1729,6 +1765,59 @@ public class InGame : MonoBehaviourPunCallbacks
             RollingDice.transform.GetChild(5).gameObject.SetActive(false);
         }
     }
+
+    void click_false_start()
+    {
+        int remained = 0;
+        for (int k = 0; k < 4; k++)
+        {
+            if (MyStartMalList.transform.GetChild(k).gameObject.activeSelf && !MyStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
+            {
+                remained++;
+                if (remained == 2)
+                    break;
+            }
+        }
+        if (remained != 2)
+        {
+            IsEsp1Using = false;
+        }
+        else
+        {
+
+        }
+        PV.RPC("use_false_start", RpcTarget.All, IsEsp1Using);
+    }
+
+    void click_mimikyu()
+    {
+
+        if (IsEspMimikyuUsing)
+        {
+            if (!IsEsp1Using)
+            {
+                MyEspList.transform.GetChild(1).GetComponent<Image>().sprite = ESP_sprite[OpEsp1];
+                MyEspList.transform.GetChild(3).gameObject.SetActive(true);
+
+                MyEspTooltipBox.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = ESPList.transform.GetChild(OpEsp1).GetChild(2).GetComponent<TMP_Text>().text;
+                MyEspTooltipBox.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[OpEsp1];
+                MyEspTooltipBox.transform.GetChild(0).GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 42 + (EspTooltip[OpEsp1].Length + 18) / 18 * 23);
+                MyEsp1 = OpEsp1;
+                IsEsp1Using = false;
+                PV.RPC("use_mimikyu", RpcTarget.All, PhotonNetwork.IsMasterClient);
+            }
+            else
+            {
+                IsEsp1Using = false;
+                IsEspMimikyuUsing = false;
+            }
+        }
+        else
+        {
+            IsEspMimikyuUsing = true;
+        }
+    }
+
     void OpMalClick(GameObject clicked_mal)
     {
         if (IsEspGoBackUsing)
@@ -2107,29 +2196,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
-    void click_false_start()
-    {
-        int remained = 0;
-        for(int k = 0; k< 4; k++)
-        {
-            if(MyStartMalList.transform.GetChild(k).gameObject.activeSelf && !MyStartMalList.transform.GetChild(k + 4).gameObject.activeSelf)
-            {
-                remained++;
-                if (remained == 2)
-                    break;
-            }
-        }
-        if(remained != 2)
-        {
-            IsEsp1Using = false;
-        }
-        else
-        {
-
-        }
-        PV.RPC("use_false_start", RpcTarget.All, IsEsp1Using);
-    }
-
+    
     [PunRPC]
     void use_false_start(bool esp_using)
     {
@@ -2141,7 +2208,12 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         IsEspMetamongUsing = esp_using;
     }
-
+    [PunRPC]
+    void use_mimikyu(bool IsMaster)
+    {
+        IsEspMimikyuUsed = true;
+        WhoUsedMimikyu = IsMaster;
+    }
 
     [PunRPC]
     void Esp1Used()
@@ -2358,7 +2430,7 @@ public class InGame : MonoBehaviourPunCallbacks
             if (master_esp1 == 8)
                 master_esp1 = 11;
             if (slave_esp1 == 8)
-                slave_esp1 = 11;
+                slave_esp1 = 11;            
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
@@ -2520,7 +2592,7 @@ public class InGame : MonoBehaviourPunCallbacks
         GameObject ready = Instantiate(Ready);
         ready.transform.SetParent(GameStart.transform);
     }
-
+    
 
     [PunRPC]
     void change_turn()
