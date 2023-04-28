@@ -28,7 +28,7 @@ public class InGame : MonoBehaviourPunCallbacks
     private string[] EspTooltip = new string[] {
                                                 "밟으면 출발 이전으로 돌아가는 폭탄을 설치한다. 폭탄엔 피아구분이 없다. 지나쳐가도 발동한다.", //0. 콰광!
                                                 "상대방의 말 하나를 출발 이전으로 돌려보낸다. 쌓인 말이 있더라도 하나만 돌려보낸다.", //1. 안 돼. 돌아가.
-                                                "윷이 아닌 주사위를 2개 굴린다. 각 주사위의 눈에 알맞는 윷으로 취급한다.(6은 뒷도) 더블이 나오면 한 번 더 굴린다.", //2. 서양문물
+                                                "윷이 아닌 주사위를 2개 굴린다. 각 주사위의 눈에 알맞는 윷으로 취급한다.(6은 뒷도)\n더블이 나오면 한 번 더 굴릴 수 있고, 그 후 말을 움직일 수 있다.", //2. 서양문물
                                                 "상대 차례를 1번 건너뛴다.",//3. 무인도
                                                 "이번 차례에 던지는 윷을 모두 다음 차례에 사용한다. 킵한 윷은 다음턴에 윷을 굴려야 사용할 수 있다.", //4. 킵이요.
                                                 "말을 하나 얹어서 출발한다. 출발 가능한 말 2개 이상이 남아 있어야 활성화 가능하며, 활성화 후 윷을 굴리고 시작말을 움직이면 사용된다. 이미 나와져 있는 말을 움직이면 사용이 취소된다.", //5. 부정출발
@@ -65,8 +65,9 @@ public class InGame : MonoBehaviourPunCallbacks
     private GameObject OpChatBubble;
 
     [Header("Roll Yut")]
-    public Button RollButton;
+    public GameObject RollButton;
     public GameObject RollingYut;
+    public GameObject RollingDice;
     public float BackProbability = 42f;
     //private float FrontProbability = 58f;
     public int CurrentYut;
@@ -125,6 +126,7 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEspMetamongUsing = false;
     private bool IsEspChangePosUsing = false;
     private bool IsEspMagnetUsing = false;
+    public bool IsEspDiceUsing = false;
     private int EspChangeIndex1 = -1;
     private int EspChangeIndex2 = -1;
     private int EspMagnetMovingMalIndex = -1;
@@ -229,7 +231,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     MyStartMalList.transform.GetChild(k).GetComponent<Button>().interactable = false;
                 }
             }
-            RollButton.interactable = (IsRollable && !IsMoving && !IsRolling);
+            RollButton.GetComponent<Button>().interactable = (IsRollable && !IsMoving && !IsRolling);
 
             if (InGameChatInputField.text.Length > 0 &&
               (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
@@ -245,6 +247,15 @@ public class InGame : MonoBehaviourPunCallbacks
     public void RollButtonClick()
     {
         IsRollable = false;
+        if (IsEspDiceUsing)
+        {
+            if (IsEsp2Using)
+                Esp2ButtonClick();
+            int red = Random.Range(0, 6);
+            int white = Random.Range(0, 6);
+            PV.RPC("roll_dice", RpcTarget.All, red, white, IsEsp1Used);
+            return;
+        }
         int back_cnt = 0;
         int back_do = 0;
         for (int k = 0; k < 4; k++) {
@@ -256,9 +267,23 @@ public class InGame : MonoBehaviourPunCallbacks
                     back_do++;
             }
             else if (yut == BackProbability)
-            {
-                back_cnt = 7; // 낙 7
-                break;
+            {                
+                if (IsEspMetamongUsing)
+                {
+                    while (yut != BackProbability)
+                        yut = Random.Range(0, 100);
+                    if (yut < BackProbability)
+                    {
+                        back_cnt++;
+                        if (k == 0)
+                            back_do++;
+                    }
+                }
+                else
+                {
+                    back_cnt = 7; // 낙 7
+                    break;
+                }
             }
         }
         if (back_cnt == 1 && back_do == 1)
@@ -293,7 +318,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         PV.RPC("roll_yut", RpcTarget.All, CurrentYut, IsEsp2Using);
     }
-
+    
     [PunRPC]
     void roll_yut(int rolled_yut, bool esp2using)
     {
@@ -321,10 +346,10 @@ public class InGame : MonoBehaviourPunCallbacks
 
         }
         IsRolled = true;
-        StartCoroutine(show_rolling());
+        StartCoroutine(show_yut_rolling());
     }
-
-    IEnumerator show_rolling()
+    
+    IEnumerator show_yut_rolling()
     {
         float timer = 0;
         while (true)
@@ -348,6 +373,120 @@ public class InGame : MonoBehaviourPunCallbacks
             yield return null;
         }
         action_rolling_result();
+    }
+
+    [PunRPC]
+    void roll_dice(int dice1, int dice2, bool used)
+    {        
+        IsRolling = true;
+        IsRollable = false;
+        if (!used)
+        {
+            int[] esp_stack = { 2 };
+            string[] ment = { "서양문물" };
+            StartCoroutine(show_esp_used(esp_stack, ment, false));
+
+            PV.RPC("Esp1Used", RpcTarget.All);
+            if(MyTurn)
+                IsEsp1Used = true;
+        }
+        StartCoroutine(show_dice_roll(dice1, dice2, used));
+    }
+
+    IEnumerator show_dice_roll(int dice1, int dice2, bool used)
+    {        
+        float timer = 0;
+        if (!used)
+        {
+            while (true)
+            {
+                timer += Time.deltaTime;
+                if (timer >= (ShowPopTime+0.5f))
+                {
+                    break;
+                }
+                yield return null;
+            }
+        }
+        RollingDice.SetActive(true);
+        for (int k = 0; k < 10; k++)
+        {
+            int rand_dice1 = Random.Range(0, 6);
+            int rand_dice2 = Random.Range(6, 12);
+            timer = 0;
+            RollingDice.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = Esp_Dice_sprite[rand_dice1];
+            RollingDice.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = Esp_Dice_sprite[rand_dice2];
+            while (true)
+            {
+                timer += Time.deltaTime;
+                if (timer >= (RollingTime / 10))
+                {
+                    break;
+                }
+                yield return null;
+            }
+        }
+        RollingDice.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = Esp_Dice_sprite[dice1];
+        RollingDice.transform.GetChild(2).GetComponent<SpriteRenderer>().sprite = Esp_Dice_sprite[dice2 + 6];
+        if (dice1 == dice2)
+            RollingDice.transform.GetChild(3).gameObject.SetActive(true);
+        else
+            RollingDice.transform.GetChild(3).gameObject.SetActive(false);
+        RollingDice.transform.GetChild(4).gameObject.SetActive(true);
+        RollingDice.transform.GetChild(5).gameObject.SetActive(true);
+        RollingDice.transform.GetChild(4).GetComponent<TMP_Text>().text = YutHanguel[dice1];
+        RollingDice.transform.GetChild(5).GetComponent<TMP_Text>().text = YutHanguel[dice2];
+        timer = 0;
+        while (true)
+        {
+            timer += Time.deltaTime;
+            if (timer >= (RollingResultTime))
+            {
+                break;
+            }
+            yield return null;
+        }
+        RollingDice.transform.GetChild(3).gameObject.SetActive(false);
+        RollingDice.transform.GetChild(4).gameObject.SetActive(false);
+        RollingDice.transform.GetChild(5).gameObject.SetActive(false);
+        RollingDice.SetActive(false);
+        if (MyTurn)
+        {
+            int now_count1 = int.Parse(MyYutStackList.transform.GetChild(dice1).GetChild(2).GetComponent<TMP_Text>().text) + 1;
+            MyYutStackList.transform.GetChild(dice1).GetChild(2).GetComponent<TMP_Text>().text = (now_count1).ToString();
+            if (now_count1 > 0)
+                MyYutStackList.transform.GetChild(dice1).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+
+            int now_count2 = int.Parse(MyYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text) + 1;
+            MyYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text = (now_count2).ToString();
+            if (now_count2 > 0)
+                MyYutStackList.transform.GetChild(dice2).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+        }
+        else
+        {
+            int now_count1 = int.Parse(OpYutStackList.transform.GetChild(dice1).GetChild(2).GetComponent<TMP_Text>().text) + 1;
+            OpYutStackList.transform.GetChild(dice1).GetChild(2).GetComponent<TMP_Text>().text = (now_count1).ToString();
+            if (now_count1 > 0)
+                OpYutStackList.transform.GetChild(dice1).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+            
+            int now_count2 = int.Parse(OpYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text) + 1;
+            OpYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text = (now_count2).ToString();
+            if (now_count2 > 0)
+                OpYutStackList.transform.GetChild(dice2).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+        }
+        CurrentYut = 0;
+        if (dice1 == dice2)
+            IsRollable = true;
+        else
+        {
+            action_rolling_result();
+            IsEspDiceUsing = false;
+            IsEsp1Using = false;
+            click_dice();
+        }
+        
+        
+        IsRolling = false;
     }
 
     void show_rolled_yut_and_stack_up()
@@ -445,7 +584,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 }
             }
 
-            if (rolled_yut == 3 || rolled_yut == 4) //윷 모
+            if (rolled_yut == 3 || rolled_yut == 4 && !IsEspDiceUsing) //윷 모
             {
                 IsRollable = true;
             }
@@ -1321,6 +1460,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
             case 2: // 서양 문물
+                click_dice();
+                MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
             case 3: // 무인도
                 PV.RPC("use_island", RpcTarget.All, IsEsp1Using);
@@ -1508,8 +1649,6 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
-    
-
     void click_magnet()
     {
         if (IsEsp1Using)
@@ -1569,7 +1708,27 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
-
+    void click_dice()
+    {
+        if (IsEsp1Using)
+        {
+            RollButton.GetComponent<Image>().sprite = Esp_Dice_sprite[12];
+            RollButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "ROLL!";
+            RollButton.transform.GetChild(0).GetComponent<TMP_Text>().color = new Color(54 / 255f, 255 / 255f, 255 / 255f, 1f);
+            RollButton.GetComponent<RectTransform>().sizeDelta = new Vector2(60f, 60f);            
+            IsEspDiceUsing = true;
+        }
+        else
+        {
+            RollButton.GetComponent<Image>().sprite = Esp_Dice_sprite[13];
+            RollButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "던져!";
+            RollButton.transform.GetChild(0).GetComponent<TMP_Text>().color = new Color(255 / 255f, 0 / 255f, 190 / 255f, 1f);
+            RollButton.GetComponent<RectTransform>().sizeDelta = new Vector2(80f, 80f);
+            IsEspDiceUsing = false;
+            RollingDice.transform.GetChild(4).gameObject.SetActive(false);
+            RollingDice.transform.GetChild(5).gameObject.SetActive(false);
+        }
+    }
     void OpMalClick(GameObject clicked_mal)
     {
         if (IsEspGoBackUsing)
@@ -2186,8 +2345,8 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             
-            int master_esp1 = Random.Range(0, 9);
-            int slave_esp1 = Random.Range(0, 9);
+            int master_esp1 = Random.Range(0, 10);
+            int slave_esp1 = Random.Range(0, 10);
             while (master_esp1 == slave_esp1)
                 master_esp1 = Random.Range(0, 9);
 
@@ -2196,13 +2355,9 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_esp2 == slave_esp2)
                 master_esp2 = Random.Range(0, 6);
 
-            if (master_esp1 == 2)
-                master_esp1 = 9;
-            else if (master_esp1 == 8)
+            if (master_esp1 == 8)
                 master_esp1 = 11;
-            if (slave_esp1 == 2)
-                slave_esp1 = 9;
-            else if (slave_esp1 == 8)
+            if (slave_esp1 == 8)
                 slave_esp1 = 11;
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
@@ -2545,6 +2700,9 @@ public class InGame : MonoBehaviourPunCallbacks
         on_off_caan_trap(2, false, -1);
         GameEnd.SetActive(false);
         RollingYut.SetActive(false);
+        RollingDice.SetActive(false);
+        RollingDice.transform.GetChild(3).gameObject.SetActive(false);
+
         MyTurn = false;
         IsRolling = false;
         IsMoving = false;
@@ -2561,6 +2719,10 @@ public class InGame : MonoBehaviourPunCallbacks
         IsEspMetamongUsing = false;
         IsEspChangePosUsing = false;
         IsEspMagnetUsing = false;
+        IsEspDiceUsing = false;
+        click_dice();
+
+
         PopEsp.SetActive(false);
         PopEspUsing.SetActive(false);
         PopTurn.SetActive(false);
