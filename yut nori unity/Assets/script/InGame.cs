@@ -130,8 +130,9 @@ public class InGame : MonoBehaviourPunCallbacks
     private int EspChangeIndex1 = -1;
     private int EspChangeIndex2 = -1;
     private int EspMagnetMovingMalIndex = -1;
-    public bool IsEspMimikyuUsing = false;
-    public bool IsEspMimikyuUsed = false;
+    private bool IsEspMimikyuUsing = false;
+    private bool IsEspMimikyuUsed = false;
+    private bool IsEspMoonWalkUsing = false;
     private bool WhoUsedMimikyu;
 
 
@@ -301,7 +302,7 @@ public class InGame : MonoBehaviourPunCallbacks
         CurrentYut--;//µµ0 °³1 °É2 À·3 ¸ð4 µÞµµ5 ³«6
         if (IsEsp1Using && !IsEsp1Used)
         {
-            if (IsEspIslandUsing || IsEspFalseStartUsing || IsEspMetamongUsing)
+            if (IsEspIslandUsing || IsEspFalseStartUsing || IsEspMetamongUsing || IsEspMoonWalkUsing)
             {
 
             }
@@ -635,19 +636,36 @@ public class InGame : MonoBehaviourPunCallbacks
         MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(IsMyStartMalClicked);
         if (IsMyStartMalClicked)
         {
-            MyClickedMovableMal = EventSystem.current.currentSelectedGameObject;
             turn_on_off_all_caan(false);
             turn_on_off_all_moved_mal(false);
-            for (int k = 0; k < 5; k++)
+            if (IsEspMoonWalkUsing)
             {
-                int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
-                if (yut > 0)
+                for (int k = 0; k < 5; k++)
                 {
-                    Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = true;
-                    Caan.transform.GetChild(k + 1).GetChild(0).GetComponent<Image>().color = YutColor[k];
-                    Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
-                    Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).name = (k).ToString();
-                    Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(true);
+                    int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
+                    if (yut > 0)
+                    {
+                        Caan.transform.GetChild(19 - k).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(19 - k).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                        Caan.transform.GetChild(19 - k).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                        Caan.transform.GetChild(19 - k).GetChild(0).GetChild(0).name = (k).ToString();
+                        Caan.transform.GetChild(19 - k).GetChild(0).gameObject.SetActive(true);
+                    }
+                }
+            }
+            else
+            {
+                for (int k = 0; k < 5; k++)
+                {
+                    int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
+                    if (yut > 0)
+                    {
+                        Caan.transform.GetChild(k + 1).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(k + 1).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                        Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                        Caan.transform.GetChild(k + 1).GetChild(0).GetChild(0).name = (k).ToString();
+                        Caan.transform.GetChild(k + 1).GetChild(0).gameObject.SetActive(true);
+                    }
                 }
             }
             for (int k = 2; k < MalBox.transform.childCount; k++)
@@ -682,101 +700,109 @@ public class InGame : MonoBehaviourPunCallbacks
 
             int clicked_mal_pos = int.Parse(clicked_moved_mal.transform.GetChild(2).name);
             int adj = 0;
-            for (int k = 0; k < 5; k++)
+            if (IsEspMoonWalkUsing)
             {
-                int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
-                if (yut > 0)
-                {
-                    if ((((clicked_mal_pos + k + 1 > 30) && (clicked_mal_pos > 25 || clicked_mal_pos == 22)) || clicked_mal_pos == 0) ||
-                        ((clicked_mal_pos + k + 1 > 20) && (clicked_mal_pos) < 20))
-                    {
-                        Caan.transform.GetChild(30).GetComponent<Button>().interactable = true;
-                        Caan.transform.GetChild(30).GetChild(0).GetComponent<Image>().color = YutColor[7];
-                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
-                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k).ToString();
-                        Caan.transform.GetChild(30).GetChild(0).gameObject.SetActive(true);
-                        Caan.transform.GetChild(0).gameObject.SetActive(false);
-                        Caan.transform.GetChild(30).gameObject.SetActive(true);
-                    }
-                    else {
-                        if ((clicked_mal_pos + k + 1 == 20) && clicked_mal_pos < 20 || (clicked_mal_pos + k + 1 == 30))
-                        {
-                            adj = -(clicked_mal_pos + k + 1);
-                            Caan.transform.GetChild(0).gameObject.SetActive(true);
-                            Caan.transform.GetChild(30).gameObject.SetActive(false);
-                        }
-                        else if (clicked_mal_pos + k + 1 == 22)
-                            adj = 5;
-                        else if (clicked_mal_pos == 5 || clicked_mal_pos == 10)
-                        {
-                            adj = 14;
-                            if (clicked_mal_pos + k + 1 + adj == 22)
-                            {
-                                adj = 19;
-                            }
-                        }
-                        else if (clicked_mal_pos + k + 1 + adj >= 25 && (20 <= clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
-                        {
-                            adj = -10;
-                        }
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetComponent<Button>().interactable = true;
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
-                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).gameObject.SetActive(true);
-                    }
-                }
+
             }
-            if (int.Parse(MyYutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+            else
             {
-                if (clicked_mal_pos == 1)
+                for (int k = 0; k < 5; k++)
                 {
-                    Caan.transform.GetChild(0).gameObject.SetActive(true);
-                    Caan.transform.GetChild(30).gameObject.SetActive(false);
-                    adj = 0;
+                    int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
+                    if (yut > 0)
+                    {
+                        if ((((clicked_mal_pos + k + 1 > 30) && (clicked_mal_pos > 25 || clicked_mal_pos == 22)) || clicked_mal_pos == 0) ||
+                            ((clicked_mal_pos + k + 1 > 20) && (clicked_mal_pos) < 20))
+                        {
+                            Caan.transform.GetChild(30).GetComponent<Button>().interactable = true;
+                            Caan.transform.GetChild(30).GetChild(0).GetComponent<Image>().color = YutColor[7];
+                            Caan.transform.GetChild(30).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
+                            Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k).ToString();
+                            Caan.transform.GetChild(30).GetChild(0).gameObject.SetActive(true);
+                            Caan.transform.GetChild(0).gameObject.SetActive(false);
+                            Caan.transform.GetChild(30).gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            if ((clicked_mal_pos + k + 1 == 20) && clicked_mal_pos < 20 || (clicked_mal_pos + k + 1 == 30))
+                            {
+                                adj = -(clicked_mal_pos + k + 1);
+                                Caan.transform.GetChild(0).gameObject.SetActive(true);
+                                Caan.transform.GetChild(30).gameObject.SetActive(false);
+                            }
+                            else if (clicked_mal_pos + k + 1 == 22)
+                                adj = 5;
+                            else if (clicked_mal_pos == 5 || clicked_mal_pos == 10)
+                            {
+                                adj = 14;
+                                if (clicked_mal_pos + k + 1 + adj == 22)
+                                {
+                                    adj = 19;
+                                }
+                            }
+                            else if (clicked_mal_pos + k + 1 + adj >= 25 && (20 <= clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
+                            {
+                                adj = -10;
+                            }
+                            Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetComponent<Button>().interactable = true;
+                            Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                            Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                            Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
+                            Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).gameObject.SetActive(true);
+                        }
+                    }
                 }
-                if (clicked_mal_pos == 0)
+                if (int.Parse(MyYutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
                 {
-                    Caan.transform.GetChild(29).GetComponent<Button>().interactable = true;
-                    Caan.transform.GetChild(29).GetChild(0).GetComponent<Image>().color = YutColor[5];
-                    Caan.transform.GetChild(29).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
-                    Caan.transform.GetChild(29).GetChild(0).GetChild(0).name = (5).ToString();
-                    Caan.transform.GetChild(29).GetChild(0).gameObject.SetActive(true);
-                    adj = 20;
+                    if (clicked_mal_pos == 1)
+                    {
+                        Caan.transform.GetChild(0).gameObject.SetActive(true);
+                        Caan.transform.GetChild(30).gameObject.SetActive(false);
+                        adj = 0;
+                    }
+                    if (clicked_mal_pos == 0)
+                    {
+                        Caan.transform.GetChild(29).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(29).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                        Caan.transform.GetChild(29).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                        Caan.transform.GetChild(29).GetChild(0).GetChild(0).name = (5).ToString();
+                        Caan.transform.GetChild(29).GetChild(0).gameObject.SetActive(true);
+                        adj = 20;
+                    }
+                    else if (clicked_mal_pos == 15)
+                    {
+                        Caan.transform.GetChild(24).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(24).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                        Caan.transform.GetChild(24).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                        Caan.transform.GetChild(24).GetChild(0).GetChild(0).name = (5).ToString();
+                        Caan.transform.GetChild(24).GetChild(0).gameObject.SetActive(true);
+                        adj = 0;
+                    }
+                    else if (clicked_mal_pos == 20 || clicked_mal_pos == 25)
+                    {
+                        adj = -14;
+                    }
+                    else if (clicked_mal_pos == 23)
+                    {
+                        adj = 5;
+                    }
+                    else if (clicked_mal_pos == 27)
+                    {
+                        Caan.transform.GetChild(21).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(21).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                        Caan.transform.GetChild(21).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                        Caan.transform.GetChild(21).GetChild(0).GetChild(0).name = (5).ToString();
+                        Caan.transform.GetChild(21).GetChild(0).gameObject.SetActive(true);
+                        adj = 0;
+                    }
+                    else
+                        adj = 0;
+                    Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetComponent<Button>().interactable = true;
+                    Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[5];
+                    Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
+                    Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).name = (5).ToString();
+                    Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).gameObject.SetActive(true);
                 }
-                else if (clicked_mal_pos == 15)
-                {
-                    Caan.transform.GetChild(24).GetComponent<Button>().interactable = true;
-                    Caan.transform.GetChild(24).GetChild(0).GetComponent<Image>().color = YutColor[5];
-                    Caan.transform.GetChild(24).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
-                    Caan.transform.GetChild(24).GetChild(0).GetChild(0).name = (5).ToString();
-                    Caan.transform.GetChild(24).GetChild(0).gameObject.SetActive(true);
-                    adj = 0;
-                }
-                else if (clicked_mal_pos == 20 || clicked_mal_pos == 25)
-                {
-                    adj = -14;
-                }
-                else if (clicked_mal_pos == 23)
-                {
-                    adj = 5;
-                }
-                else if (clicked_mal_pos == 27)
-                {
-                    Caan.transform.GetChild(21).GetComponent<Button>().interactable = true;
-                    Caan.transform.GetChild(21).GetChild(0).GetComponent<Image>().color = YutColor[5];
-                    Caan.transform.GetChild(21).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
-                    Caan.transform.GetChild(21).GetChild(0).GetChild(0).name = (5).ToString();
-                    Caan.transform.GetChild(21).GetChild(0).gameObject.SetActive(true);
-                    adj = 0;
-                }
-                else
-                    adj = 0;
-                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetComponent<Button>().interactable = true;
-                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[5];
-                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[5];
-                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).GetChild(0).name = (5).ToString();
-                Caan.transform.GetChild(clicked_mal_pos + -1 + adj).GetChild(0).gameObject.SetActive(true);
             }
         }
         else
@@ -1483,6 +1509,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 PV.RPC("use_metamong", RpcTarget.All, IsEsp1Using);
                 break;
             case 8: // ¹®¿öÅ©
+                IsEspMoonWalkUsing = IsEsp1Using;
                 break;
             case 9: // ÁýÀ¸·Î
                 on_off_caan_trap(2, IsEsp1Using, -1);
@@ -2151,9 +2178,13 @@ public class InGame : MonoBehaviourPunCallbacks
         StartCoroutine(esp_magnet(moving_mal, des_caan));
         EspChangeIndex1 = -1;
         EspChangeIndex2 = -1;
-        IsEsp1Used = true;
-        IsEsp1Using = false;
-        IsEspMagnetUsing = false;
+        if (MyTurn)
+        {
+            IsEsp1Used = true;
+            IsEsp1Using = false;
+        }
+            IsEspMagnetUsing = false;
+        
     }
     IEnumerator esp_magnet(GameObject moving_mal, GameObject des_caan)
     {
@@ -2191,6 +2222,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 Destroy(MalBox.transform.GetChild(k).gameObject);
             }
         }
+        moving_mal.transform.GetChild(2).name = des_caan_num;
+        moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = des_caan_num;
         if (MyTurn)
         {
             IsEsp1Using = false;
