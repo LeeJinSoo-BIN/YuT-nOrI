@@ -11,22 +11,35 @@ using UnityEngine.EventSystems;
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     // Start is called before the first frame update
+    
+
+
+    [Header("로그인")]
+    public GameObject LoginPanel;
+    public TMP_InputField NickNameInput;    
+    public TMP_Text ConnectButtonText;
     public bool Connecting = false;
     public bool Disconnecting = false;
 
 
+    [Header("옵션, 메뉴얼")]    
+    public GameObject OptionPanel;
+    public TMP_Dropdown Resolution;
+    
+    public GameObject ManualPanel;
 
-    public GameObject LoginPanel;
-    public TMP_InputField NickNameInput;    
-    public TMP_Text ConnectButtonText;
-
+    [Header("로비")]
     public GameObject LobbyPanel;
     public TMP_Text DisconnectButtonText;
     public GameObject LobbyButtonList;
 
+
+    [Header("방 생성")]
     public GameObject CreateRoomPanel;
     public TMP_InputField RoomNameToCreat;
 
+
+    [Header("방 안")]
     public GameObject InRoomPanel;
     public TMP_Text RoomNameInRoomPanel;
     public TMP_Text ChatLog;
@@ -39,17 +52,18 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Button ReadyButton;
     public GameObject ReadyInRoomPanel;
 
-
+    [Header("방 참가")]
     public GameObject JoinRoomPanel;
     public GameObject RoomList;
     public GameObject RoomInfo;
+    
 
+    
     public PhotonView PV;
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
 
-    public GameObject OptionPanel;
-    public TMP_Dropdown Resolution;
+    
 
     private void Awake()
     {
@@ -66,6 +80,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         InRoomPanel.SetActive(false);
         JoinRoomPanel.SetActive(false);
         OptionPanel.SetActive(false);
+        ManualPanel.SetActive(false);
     }
 
     // Update is called once per frame
@@ -347,6 +362,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         string[] selected_resolution = selected_resolution_string.Split(" x ");
         Screen.SetResolution(int.Parse(selected_resolution[0]), int.Parse(selected_resolution[1]), false);
         
+    }
+
+    public void ManualButtonClick()
+    {
+        ManualPanel.SetActive(true);
     }
 }
 

@@ -109,7 +109,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public int MyEsp2;
     public int OpEsp1;
     public int OpEsp2;
-    private int LoopEspShowCnt = 2;
+    private int LoopEspShowCnt = 4;
     public float EspPopTime = 0.02f;
     public float EspPopSlowDown = 1.2f;
     private bool EspDone = false;
@@ -2465,6 +2465,7 @@ public class InGame : MonoBehaviourPunCallbacks
         show_esp_used(esp_stack, ment, false);        
         GameObject moving_mal = MalBox.transform.GetChild(moving_mal_index).gameObject;
         GameObject des_caan = Caan.transform.GetChild(des_caan_index).gameObject;
+        turn_on_off_all_caan(false);
         StartCoroutine(esp_magnet(moving_mal, des_caan));
         EspChangeIndex1 = -1;
         EspChangeIndex2 = -1;
