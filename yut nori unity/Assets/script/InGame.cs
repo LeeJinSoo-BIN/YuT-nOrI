@@ -302,9 +302,14 @@ public class InGame : MonoBehaviourPunCallbacks
         CurrentYut--;//도0 개1 걸2 윷3 모4 뒷도5 낙6
         if (IsEsp1Using && !IsEsp1Used)
         {
-            if (IsEspIslandUsing || IsEspFalseStartUsing || IsEspMetamongUsing || IsEspMoonWalkUsing)
+            if (IsEspIslandUsing || IsEspFalseStartUsing || IsEspMetamongUsing)
             {
 
+            }
+            else if (IsEspMoonWalkUsing)
+            {
+                if (!IsEsp1Used && CurrentYut == 7 && !Check_Mal_Movable(MyYutStackList, MyStartMalList))
+                    Esp1ButtonClick();
             }
             else
             {
@@ -702,7 +707,126 @@ public class InGame : MonoBehaviourPunCallbacks
             int adj = 0;
             if (IsEspMoonWalkUsing)
             {
-
+                for (int k = 0; k < 5; k++)
+                {
+                    adj = 0;
+                    int yut = int.Parse(MyYutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text);
+                    if (yut > 0)
+                    {
+                        if (clicked_mal_pos == 15)
+                        {
+                            adj = 10;
+                            if (clicked_mal_pos - k - 1 + adj == 22)
+                            {
+                                Caan.transform.GetChild(27).GetComponent<Button>().interactable = true;
+                                Caan.transform.GetChild(27).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                                Caan.transform.GetChild(27).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                                Caan.transform.GetChild(27).GetChild(0).GetChild(0).name = (k).ToString();
+                                Caan.transform.GetChild(27).GetChild(0).gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetComponent<Button>().interactable = true;
+                                Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                                Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                                Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
+                                Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).gameObject.SetActive(true);
+                            }
+                            adj = 0;
+                        }                        
+                        else if (clicked_mal_pos == 27)
+                        {
+                            adj = -5;
+                            if (clicked_mal_pos - k - 1 + adj < 20)
+                            {
+                                adj = -22;
+                            }
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetComponent<Button>().interactable = true;
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).gameObject.SetActive(true);
+                            adj = 0;
+                            if(clicked_mal_pos - k - 1 + adj < 25)
+                            {
+                                adj = -17;
+                            }
+                        }
+                        else if (clicked_mal_pos - k - 1 + adj < 0)
+                        {
+                            adj = 20;
+                        }                        
+                        else if (20 <= clicked_mal_pos && clicked_mal_pos <= 24 && clicked_mal_pos - k - 1 + adj < 20)
+                        {
+                            adj = -14;
+                        }
+                        else if (25 <= clicked_mal_pos && clicked_mal_pos <= 29 && clicked_mal_pos - k - 1 + adj < 25)
+                        {
+                            adj = -14;
+                        }
+                        
+                        if (clicked_mal_pos - k - 1 + adj == 22)
+                        {
+                            Caan.transform.GetChild(27).GetComponent<Button>().interactable = true;
+                            Caan.transform.GetChild(27).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                            Caan.transform.GetChild(27).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                            Caan.transform.GetChild(27).GetChild(0).GetChild(0).name = (k).ToString();
+                            Caan.transform.GetChild(27).GetChild(0).gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetComponent<Button>().interactable = true;
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
+                            Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).gameObject.SetActive(true);
+                        }
+                        print(clicked_mal_pos + " " + k + " " + adj);
+                    }
+                }
+                if (int.Parse(MyYutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+                {
+                    int k = 0;
+                    if ((((clicked_mal_pos + k + 1 > 30) && (clicked_mal_pos > 25 || clicked_mal_pos == 22)) || clicked_mal_pos == 0) ||
+                            ((clicked_mal_pos + k + 1 > 20) && (clicked_mal_pos) < 20))
+                    {
+                        Caan.transform.GetChild(30).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(30).GetChild(0).GetComponent<Image>().color = YutColor[7];
+                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[7];
+                        Caan.transform.GetChild(30).GetChild(0).GetChild(0).name = (k).ToString();
+                        Caan.transform.GetChild(30).GetChild(0).gameObject.SetActive(true);
+                        Caan.transform.GetChild(0).gameObject.SetActive(false);
+                        Caan.transform.GetChild(30).gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        if ((clicked_mal_pos + k + 1 == 20) && clicked_mal_pos < 20 || (clicked_mal_pos + k + 1 == 30))
+                        {
+                            adj = -(clicked_mal_pos + k + 1);
+                            Caan.transform.GetChild(0).gameObject.SetActive(true);
+                            Caan.transform.GetChild(30).gameObject.SetActive(false);
+                        }
+                        else if (clicked_mal_pos + k + 1 == 22)
+                            adj = 5;
+                        else if (clicked_mal_pos == 5 || clicked_mal_pos == 10)
+                        {
+                            adj = 14;
+                            if (clicked_mal_pos + k + 1 + adj == 22)
+                            {
+                                adj = 19;
+                            }
+                        }
+                        else if (clicked_mal_pos + k + 1 + adj >= 25 && (20 <= clicked_mal_pos && clicked_mal_pos <= 24) && clicked_mal_pos != 22)
+                        {
+                            adj = -10;
+                        }
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetComponent<Button>().interactable = true;
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetComponent<Image>().color = YutColor[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = YutHanguel[k];
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
+                        Caan.transform.GetChild(clicked_mal_pos + k + 1 + adj).GetChild(0).gameObject.SetActive(true);
+                    }
+                }
             }
             else
             {
@@ -826,6 +950,7 @@ public class InGame : MonoBehaviourPunCallbacks
             return;
         }        
         int moving_yut = int.Parse(current_clicked_caan.transform.GetChild(0).GetChild(0).name);
+        
         if (IsMyStartMalClicked)
         {
             turn_on_off_all_caan(false);
@@ -855,11 +980,11 @@ public class InGame : MonoBehaviourPunCallbacks
             GameObject current_clicked_mal = MyStartMalList.transform.GetChild(clicked_start_mal_num).gameObject;
             current_clicked_mal.SetActive(false);
             moving_mal = Instantiate(MyMovingMal);
-            int yut_stack = int.Parse(MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text);
-            MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            int yut_stack = int.Parse(MyYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text);
+            MyYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
             if (yut_stack - 1 == 0)
             {
-                MyYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                MyYutStackList.transform.GetChild(moving_yut).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             }
         }
         else
@@ -867,11 +992,11 @@ public class InGame : MonoBehaviourPunCallbacks
             GameObject current_clicked_mal = OpStartMalList.transform.GetChild(clicked_start_mal_num).gameObject;
             current_clicked_mal.SetActive(false);
             moving_mal = Instantiate(OpMovingMal);
-            int yut_stack = int.Parse(OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text);
-            OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
+            int yut_stack = int.Parse(OpYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text);
+            OpYutStackList.transform.GetChild(moving_yut).GetChild(2).GetComponent<TMP_Text>().text = (yut_stack - 1).ToString();
             if (yut_stack - 1 == 0)
             {
-                OpYutStackList.transform.GetChild(clicked_caan_num - 1).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
+                OpYutStackList.transform.GetChild(moving_yut).GetComponent<Image>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f, 128 / 255f);
             }
         }
         moving_mal.transform.SetParent(MalBox.transform);
@@ -968,119 +1093,251 @@ public class InGame : MonoBehaviourPunCallbacks
     }
     GameObject way_over(int mal_pos, int caan_pos)
     {
-        if ((1 <= mal_pos && mal_pos <= 4) && 5 < caan_pos)
-            return Caan.transform.GetChild(5).gameObject;
-        else if ((6 <= mal_pos && mal_pos <= 9) && 10 < caan_pos)
-            return Caan.transform.GetChild(10).gameObject;
-        else if ((11 <= mal_pos && mal_pos <= 14) && 15 < caan_pos)
-            return Caan.transform.GetChild(15).gameObject;
-        else if ((20 <= mal_pos && mal_pos <= 24) && 16 <= caan_pos && caan_pos <= 19)
-            return Caan.transform.GetChild(15).gameObject;
+        if (IsEspMoonWalkUsing)
+        {
+            if ((1 <= mal_pos && mal_pos <= 4) && 15 < caan_pos && caan_pos < 20)
+                return Caan.transform.GetChild(30).gameObject;
+            else if ((6 <= mal_pos && mal_pos <= 9) && 0 < caan_pos && caan_pos < 5)
+                return Caan.transform.GetChild(5).gameObject;
+            else if ((11 <= mal_pos && mal_pos <= 14) && 5 < caan_pos && caan_pos < 10)
+                return Caan.transform.GetChild(10).gameObject;
+            else if ((16 <= mal_pos && mal_pos <= 19) && 10 < caan_pos && caan_pos < 15)
+                return Caan.transform.GetChild(15).gameObject;
+            else if ((20 <= mal_pos && mal_pos <= 24 || mal_pos == 27) && 0 < caan_pos && caan_pos < 5)
+                return Caan.transform.GetChild(5).gameObject;
+            else if ((25 <= mal_pos && mal_pos <= 29) && 5 < caan_pos && caan_pos < 10)
+                return Caan.transform.GetChild(10).gameObject;
+
+        }
+        else
+        {
+            if ((1 <= mal_pos && mal_pos <= 4) && 5 < caan_pos && caan_pos < 10)
+                return Caan.transform.GetChild(5).gameObject;
+            else if ((6 <= mal_pos && mal_pos <= 9) && 10 < caan_pos && caan_pos < 15)
+                return Caan.transform.GetChild(10).gameObject;
+            else if ((11 <= mal_pos && mal_pos <= 14) && 15 < caan_pos && caan_pos < 20)
+                return Caan.transform.GetChild(15).gameObject;
+            else if ((20 <= mal_pos && mal_pos <= 24) && 16 <= caan_pos && caan_pos <= 19)
+                return Caan.transform.GetChild(15).gameObject;            
+        }
         return Caan.transform.GetChild(0).gameObject;
     }
     int check_trap(int start_pos, int des_pos, int[] trap_pos, int rolled_yut)
     {
-        if (des_pos == -1 || trap_pos[0] == 0)
-            return -1;
-        if (start_pos == 0 && des_pos == 30)
-            return -1;
-        if (des_pos == 0)
-            des_pos = 30;
-
-        print("from " + start_pos + ", to " + des_pos + ", with " + rolled_yut);
-        if (rolled_yut == 5)
+        if (IsEspMoonWalkUsing)
         {
-            for (int k = 0; k < TrapType.Length; k++)
+            print("from " + start_pos + ", to " + des_pos + ", with " + rolled_yut);
+            int caught_trap_pos = -1;
+            if (start_pos == 0)
             {
-                if (trap_pos[TrapType[k]] == des_pos)
+                for (int k = 0; k < TrapType.Length; k++)
                 {
-                    return des_pos;
-                }
-            }
-            return -1;
-        }        
-        
-        if (start_pos == 5 && ((20 <= des_pos && des_pos <= 24) || des_pos == 27))
-        {
-            int caught_trap_pos = 31;
-            for (int k = 0; k < TrapType.Length; k++)
-            {
-                if (20 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos)
-                {
-                    if (caught_trap_pos > trap_pos[TrapType[k]])
-                        caught_trap_pos = trap_pos[TrapType[k]];
-                }
-            }
-            if (caught_trap_pos == 31)
-                return -1;
-            else
-                return caught_trap_pos;
-        }
-        else if (start_pos == 10 && (25 <= des_pos && des_pos <= 29))
-        {
-            int caught_trap_pos = 31;
-            for (int k = 0; k < TrapType.Length; k++)
-            {
-                if (25 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos)
-                {
-                    if (caught_trap_pos > trap_pos[TrapType[k]])
-                        caught_trap_pos = trap_pos[TrapType[k]];
-                }
-            }
-            if (caught_trap_pos == 31)
-                return -1;
-            else
-                return caught_trap_pos;
-        }
-        else if (des_pos == 15 && (21 <= start_pos && start_pos <= 24))
-        {
-            int caught_trap_pos = 31;
-            for (int k = 0; k < TrapType.Length; k++)
-            {
-                if (trap_pos[TrapType[k]] == 27)
-                {
-                    if (caught_trap_pos < trap_pos[TrapType[k]] - 5)
+                    if (trap_pos[TrapType[k]] >= des_pos && 15 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= 19)
                     {
-                        caught_trap_pos = trap_pos[TrapType[k]] - 5;
+                        if (caught_trap_pos < trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
                     }
                 }
-                if( trap_pos[TrapType[k]] == 15)
+                return caught_trap_pos;
+            }
+            else if (start_pos == 15)
+            {
+                if (des_pos == 27)
+                    des_pos = 22;
+                if (20 <= des_pos && des_pos <= 24)
                 {
-                    if (caught_trap_pos < trap_pos[TrapType[k]] + 10)
+                    for (int k = 0; k < TrapType.Length; k++)
                     {
-                        caught_trap_pos = trap_pos[TrapType[k]] +10;
+                        if (caught_trap_pos < trap_pos[TrapType[k]] && (24 >= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] >= des_pos))
+                            caught_trap_pos = trap_pos[TrapType[k]];
                     }
+                    if (caught_trap_pos == 22)
+                        return 27;
+                    else
+                        return caught_trap_pos;
                 }
-                if (start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= 24)
+                else if (des_pos < 15)
                 {
-                    if (caught_trap_pos > trap_pos[TrapType[k]])
-                        caught_trap_pos = trap_pos[TrapType[k]];
+                    for (int k = 0; k < TrapType.Length; k++)
+                    {
+                        if ((caught_trap_pos < trap_pos[TrapType[k]]) && start_pos > trap_pos[TrapType[k]] && trap_pos[TrapType[k]] >= des_pos)
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                    return caught_trap_pos;
                 }
             }
-            if (caught_trap_pos == 31)
-                return -1;
-            else if (caught_trap_pos == 22)
-                return 27;
-            else if (caught_trap_pos == 25)
-                return 15;
+            else if (20 <= start_pos && start_pos <= 24)
+            {
+                if (des_pos == 27)
+                    des_pos = 22;
+                if (des_pos == 5)
+                    des_pos = 19;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (start_pos > trap_pos[TrapType[k]] && trap_pos[TrapType[k]] >= des_pos)
+                    {
+                        if (caught_trap_pos < trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 22)
+                    return 27;
+                else if (caught_trap_pos == 19)
+                    return 5;
+                else
+                    return caught_trap_pos;
+            }
+            else if (25 <= start_pos && start_pos <= 29)
+            {
+                if (des_pos == 10)
+                    des_pos = 24;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (start_pos > trap_pos[TrapType[k]] && trap_pos[TrapType[k]] >= des_pos)
+                    {
+                        if (caught_trap_pos < trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 24)
+                    return 10;
+                else
+                    return caught_trap_pos;
+            }
             else
+            {
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (caught_trap_pos < trap_pos[TrapType[k]] && (start_pos > trap_pos[TrapType[k]] && trap_pos[TrapType[k]] >= des_pos))
+                        caught_trap_pos = trap_pos[TrapType[k]];
+                }
                 return caught_trap_pos;
+            }
+            return -1;
         }
         else
         {
-            int caught_trap_pos = 31;
-            for (int k = 0; k < TrapType.Length; k++)
-            {
-                if ((start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos) || des_pos == trap_pos[TrapType[k]])
-                {
-                    if (caught_trap_pos > trap_pos[TrapType[k]])
-                        caught_trap_pos = trap_pos[TrapType[k]];
-                }
-            }
-            if (caught_trap_pos == 31)
+            if (des_pos == -1 || trap_pos[0] == 0)
                 return -1;
+            if (start_pos == 0 && des_pos == 30)
+                return -1;
+            if (des_pos == 0)
+                des_pos = 30;
+
+
+            print("from " + start_pos + ", to " + des_pos + ", with " + rolled_yut);
+            if (rolled_yut == 5)
+            {
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (trap_pos[TrapType[k]] == des_pos)
+                    {
+                        return des_pos;
+                    }
+                }
+                return -1;
+            }
+
+            if (start_pos == 5 && ((20 <= des_pos && des_pos <= 24) || des_pos == 27))
+            {
+                int caught_trap_pos = 31;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (des_pos == 27 || des_pos > 22)
+                    {
+                        if (trap_pos[TrapType[k]] == 27)
+                        {
+                            if (caught_trap_pos > 22)
+                                caught_trap_pos = 22;
+                        }
+                        else
+                        {
+                            if (20 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= 22)
+                            {
+                                if (caught_trap_pos > trap_pos[TrapType[k]])
+                                    caught_trap_pos = trap_pos[TrapType[k]];
+                            }
+                        }
+                    }
+                    else if (20 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos)
+                    {
+                        if (caught_trap_pos > trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 31)
+                    return -1;
+                else if (caught_trap_pos == 22)
+                    return 27;
+                else
+                    return caught_trap_pos;
+            }
+            else if (start_pos == 10 && (25 <= des_pos && des_pos <= 29))
+            {
+                int caught_trap_pos = 31;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (25 <= trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos)
+                    {
+                        if (caught_trap_pos > trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 31)
+                    return -1;
+                else
+                    return caught_trap_pos;
+            }
+            else if (des_pos == 15 && (20 <= start_pos && start_pos <= 24))
+            {
+                int caught_trap_pos = 31;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if (trap_pos[TrapType[k]] == 27)
+                    {
+                        if (caught_trap_pos < trap_pos[TrapType[k]] - 5)
+                        {
+                            caught_trap_pos = trap_pos[TrapType[k]] - 5;
+                        }
+                    }
+                    if (trap_pos[TrapType[k]] == 15)
+                    {
+                        if (caught_trap_pos < trap_pos[TrapType[k]] + 10)
+                        {
+                            caught_trap_pos = trap_pos[TrapType[k]] + 10;
+                        }
+                    }
+                    if (start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= 24)
+                    {
+                        if (caught_trap_pos > trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 31)
+                    return -1;
+                else if (caught_trap_pos == 22)
+                    return 27;
+                else if (caught_trap_pos == 25)
+                    return 15;
+                else
+                    return caught_trap_pos;
+            }
             else
-                return caught_trap_pos;
+            {
+                int caught_trap_pos = 31;
+                for (int k = 0; k < TrapType.Length; k++)
+                {
+                    if ((start_pos < trap_pos[TrapType[k]] && trap_pos[TrapType[k]] <= des_pos) || des_pos == trap_pos[TrapType[k]])
+                    {
+                        if (caught_trap_pos > trap_pos[TrapType[k]])
+                            caught_trap_pos = trap_pos[TrapType[k]];
+                    }
+                }
+                if (caught_trap_pos == 31)
+                    return -1;
+                else
+                    return caught_trap_pos;
+            }
         }
 
     }
@@ -1108,7 +1365,12 @@ public class InGame : MonoBehaviourPunCallbacks
     }
     IEnumerator MoveMotion(GameObject moving_mal, GameObject des_caan, int moving_cnt)
     {
-        if (Check_Mal_Movable(MyYutStackList, MyStartMalList))
+        if(IsEspMoonWalkUsing && !IsEsp1Used)
+        {
+            IsEsp1Used = true;
+            PV.RPC("use_moon_walk", RpcTarget.All);
+        }
+        if (Check_Start_Mal_Movable(MyYutStackList, MyStartMalList))
         {
             for (int t = 0; t < 4; t++)
             {
@@ -1129,9 +1391,8 @@ public class InGame : MonoBehaviourPunCallbacks
         int layover_pos = -1;
         if (layover_caan.name != "0")
             layover_pos = int.Parse(layover_caan.name);
-
-        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos, moving_cnt);        
-
+        print("layover moving.. mal pos: " + moving_mal_pos + ", des_can: " + des_caan_pos + ", layover: " + layover_pos);
+        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos, moving_cnt); 
 
 
         Vector3 layover_des;
@@ -1159,21 +1420,26 @@ public class InGame : MonoBehaviourPunCallbacks
                 yield return null;
             }
         }
-        moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
-        caught_trap_pos = check_trap(moving_mal_pos, des_caan_pos, trap_pos, moving_cnt);
 
+
+        moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
+        des_caan_pos = int.Parse(des_caan.name);        
+        caught_trap_pos = check_trap(moving_mal_pos, des_caan_pos, trap_pos, moving_cnt);
         Vector3 des_pos;
         if (caught_trap_pos == -1)
         {
             des_pos = des_caan.transform.position + new Vector3(0f, 0.15f);
             moving_mal.transform.GetChild(2).name = des_caan.name;
+            print("final moving.. mal pos: " + moving_mal_pos + ", des_can: " + des_caan.name);
         }
         else
         {
             des_pos = Caan.transform.GetChild(caught_trap_pos).transform.position + new Vector3(0f, 0.15f);
             moving_mal.transform.GetChild(2).name = caught_trap_pos.ToString();
             print("caught in trap after layover at " + caught_trap_pos);
+            print("final moving.. mal pos: " + moving_mal_pos + ", des_can: " + caught_trap_pos);
         }
+        
         while (true)
         {
             moving_mal.transform.position = Vector2.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
@@ -1184,8 +1450,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 action_moving_result(moving_mal, moving_cnt, caught_trap_pos);
                 if (caught_trap_pos == -1)
                 {
-                    moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = (des_caan_pos).ToString();
-                    moving_mal.transform.GetChild(2).name = (des_caan_pos).ToString();
+                    moving_mal.transform.GetChild(2).GetComponent<TMP_Text>().text = (des_caan.name).ToString();
+                    moving_mal.transform.GetChild(2).name = (des_caan.name).ToString();
                 }
                 break;
             }
@@ -1464,6 +1730,24 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         return false;
     }
+    bool Check_Start_Mal_Movable(GameObject YutStackList, GameObject StartMalList)
+    {
+        if (IsEspKeepUsing)
+            return false;
+        int yut = 0;
+        for (int k = 0; k < 5; k++)
+        {
+            yut++;
+            if (int.Parse(YutStackList.transform.GetChild(k).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+                return true;
+        }
+        if (int.Parse(YutStackList.transform.GetChild(5).GetChild(2).GetComponent<TMP_Text>().text) > 0)
+        {
+            if (yut == 0)
+                return false;
+        }
+        return false;
+    }
 
     #endregion
 
@@ -1509,7 +1793,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 PV.RPC("use_metamong", RpcTarget.All, IsEsp1Using);
                 break;
             case 8: // 문워크
-                IsEspMoonWalkUsing = IsEsp1Using;
+                PV.RPC("click_moon_walk", RpcTarget.All);
                 break;
             case 9: // 집으로
                 on_off_caan_trap(2, IsEsp1Using, -1);
@@ -1843,6 +2127,12 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             IsEspMimikyuUsing = true;
         }
+    }
+
+    [PunRPC]
+    void click_moon_walk()
+    {
+        IsEspMoonWalkUsing = IsEsp1Using;
     }
 
     void OpMalClick(GameObject clicked_mal)
@@ -2231,6 +2521,14 @@ public class InGame : MonoBehaviourPunCallbacks
         }
     }
 
+    [PunRPC]
+    void use_moon_walk()
+    {
+        int[] used_esp = { 8 };
+        string[] ment = { "문 워크" };
+        StartCoroutine(show_esp_used(used_esp, ment, false));
+        Esp1Used();
+    }
     
     [PunRPC]
     void use_false_start(bool esp_using)
@@ -2391,8 +2689,12 @@ public class InGame : MonoBehaviourPunCallbacks
             if (haved)
                 continue;
             Caan.transform.GetChild(k).GetChild(trap_type).gameObject.SetActive(on);
+            Caan.transform.GetChild(k).GetChild(trap_type).GetComponent<Button>().interactable = on;
             if (k == exept_num)
+            {
                 Caan.transform.GetChild(k).GetChild(trap_type).gameObject.SetActive(!on);
+                Caan.transform.GetChild(k).GetChild(trap_type).GetComponent<Button>().interactable = false;
+            }
         }
     }
 
@@ -2452,20 +2754,17 @@ public class InGame : MonoBehaviourPunCallbacks
             while (master_mal == slave__mal)
                 master_mal = Random.Range(0, 7);
             
-            int master_esp1 = Random.Range(0, 10);
-            int slave_esp1 = Random.Range(0, 10);
+            int master_esp1 = Random.Range(0, 12);
+            int slave_esp1 = Random.Range(0, 12);
             while (master_esp1 == slave_esp1)
-                master_esp1 = Random.Range(0, 9);
+                master_esp1 = Random.Range(0, 12);
 
             int master_esp2 = Random.Range(0, 6);
             int slave_esp2 = Random.Range(0, 6);
             while (master_esp2 == slave_esp2)
                 master_esp2 = Random.Range(0, 6);
 
-            if (master_esp1 == 8)
-                master_esp1 = 11;
-            if (slave_esp1 == 8)
-                slave_esp1 = 11;            
+            
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
     }
@@ -2651,6 +2950,8 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             IsEspKeepUsing = false;
         }
+        if (IsEspMoonWalkUsing)
+            IsEspMoonWalkUsing = false;
         StartCoroutine(wait_and_change());
     }
     IEnumerator wait_and_change()
@@ -2827,6 +3128,7 @@ public class InGame : MonoBehaviourPunCallbacks
         IsEspChangePosUsing = false;
         IsEspMagnetUsing = false;
         IsEspDiceUsing = false;
+        IsEspMoonWalkUsing = false;
         click_dice();
 
 

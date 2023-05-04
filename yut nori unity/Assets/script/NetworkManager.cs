@@ -188,6 +188,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             GameObject member_info = Instantiate(RoomMemberInfo);
             member_info.transform.SetParent(RoomMemberList.transform);
+            member_info.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);
             string member_nickname = PhotonNetwork.PlayerList[k].NickName;
             if (PhotonNetwork.PlayerList[k].IsMasterClient)
             {

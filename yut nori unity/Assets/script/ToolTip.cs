@@ -13,6 +13,7 @@ public class ToolTip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     public void OnPointerEnter(PointerEventData eventData)
     {
         string mouse_on_object_name = this.name;
+        print(mouse_on_object_name + " in");
         if (mouse_on_object_name == "my esp 1")
             MyEspTooltipBox.transform.GetChild(0).gameObject.SetActive(true);
         else if (mouse_on_object_name == "my esp 2")
@@ -23,11 +24,14 @@ public class ToolTip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             OpEspTooltipBox.transform.GetChild(1).gameObject.SetActive(true);
         else if (mouse_on_object_name == "mimic")
             MyEspTooltipBox.transform.GetChild(2).gameObject.SetActive(true);
+        else if (mouse_on_object_name == "bomb")
+            print("bomb in");
     }
 
         public void OnPointerExit(PointerEventData eventData)
     {
         string mouse_on_object_name = this.name;
+        print(mouse_on_object_name + " out");
         if (mouse_on_object_name == "my esp 1")
             MyEspTooltipBox.transform.GetChild(0).gameObject.SetActive(false);
         else if (mouse_on_object_name == "my esp 2")
@@ -38,5 +42,7 @@ public class ToolTip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             OpEspTooltipBox.transform.GetChild(1).gameObject.SetActive(false);
         else if (mouse_on_object_name == "mimic")
             MyEspTooltipBox.transform.GetChild(2).gameObject.SetActive(false);
+        else if (mouse_on_object_name == "bomb")
+            print("bomb out");
     }
 }

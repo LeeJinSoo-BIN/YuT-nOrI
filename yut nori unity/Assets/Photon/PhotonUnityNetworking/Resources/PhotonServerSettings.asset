@@ -71,6 +71,8 @@ MonoBehaviour:
   - use_magnet
   - roll_dice
   - use_mimikyu
+  - use_moon_walk
+  - click_moon_walk
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
