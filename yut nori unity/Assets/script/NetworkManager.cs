@@ -27,6 +27,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public TMP_Dropdown Resolution;
     
     public GameObject ManualPanel;
+    public GameObject ErrorPop;
 
     [Header("로비")]
     public GameObject LobbyPanel;
@@ -56,8 +57,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject JoinRoomPanel;
     public GameObject RoomList;
     public GameObject RoomInfo;
-    
-
+    public GameObject DirectRoomName;
+    private float ShowErrorTime = 1.5f;
     
     public PhotonView PV;
     public GameObject WaitCanvas;
@@ -81,6 +82,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         JoinRoomPanel.SetActive(false);
         OptionPanel.SetActive(false);
         ManualPanel.SetActive(false);
+        ErrorPop.SetActive(false);
     }
 
     // Update is called once per frame
@@ -116,6 +118,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     }
 
+    #region 로그인
     public void ConnectButtonClick()
     {
         Connecting = true;
@@ -157,9 +160,35 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         LobbyPanel.SetActive(false);
     }
 
+    public void CloseButtonClick()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
+        current_clicked_button.transform.parent.gameObject.SetActive(false);
+    }
+
+    public void OptionButtonClick()
+    {
+        OptionPanel.SetActive(!OptionPanel.activeSelf);
+    }
+
+    public void SelectResolution()
+    {
+        string selected_resolution_string = Resolution.options[Resolution.value].text;
+        print(selected_resolution_string);
+        string[] selected_resolution = selected_resolution_string.Split(" x ");
+        Screen.SetResolution(int.Parse(selected_resolution[0]), int.Parse(selected_resolution[1]), false);
+    }
+
+    public void ManualButtonClick()
+    {
+        ManualPanel.SetActive(true);
+    }
+
+    #endregion
 
 
-
+    #region 로비
+    #region 방 생성
     public void CreateRoomButtonClickInLobby()
     {
         CreateRoomPanel.SetActive(true);
@@ -170,17 +199,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         CreateRoomPanel.SetActive(false);
         //PhotonNetwork.JoinRoom(RoomNameToCreat.text);
     }
-
-    public override void OnJoinedRoom()
-    {
-        InRoomPanel.SetActive(true);
-        LobbyPanel.SetActive(false);
-        JoinRoomPanel.SetActive(false);
-        RoomNameInRoomPanel.text = PhotonNetwork.CurrentRoom.Name;
-        update_room_member();
-        delete_chat_log();        
-    }
-
+       
+    
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         update_room_member();
@@ -192,7 +212,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "님이 퇴장하셨습니다</color>");
         PV.RPC("ready_in_room", RpcTarget.AllBuffered, false);        
     }
-    
+    #endregion
+
+    #region 방 참가
+    public void JoinRoomButtonClickInLobby()
+    {
+        JoinRoomPanel.SetActive(true);
+    }
+
     void update_room_member()
     {
         for (int k = 0; k < RoomMemberList.transform.childCount; k++)
@@ -208,7 +235,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if (PhotonNetwork.PlayerList[k].IsMasterClient)
             {
                 member_nickname += " (*)";
-                
+
             }
             member_info.transform.GetChild(0).GetComponent<TMP_Text>().text = member_nickname;
             member_info.SetActive(true);
@@ -217,33 +244,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         ReadyButton.interactable = !PhotonNetwork.LocalPlayer.IsMasterClient;
     }
 
-    void delete_chat_log()
-    {
-        for (int k = 0; k < ChatLogList.transform.childCount; k++)
-        {
-            Destroy(ChatLogList.transform.GetChild(k).gameObject);
-        }
-        ChatInputField.text = "";
-    }
-
-    public void JoinRoomButtonClickInLobby()
-    {        
-        JoinRoomPanel.SetActive(true);        
-    }
-
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         //print("room list updated");
-        UpdateRoomList(roomList);        
+        UpdateRoomList(roomList);
     }
-    
-
     void UpdateRoomList(List<RoomInfo> roomList)
     {
         for (int k = 0; k < RoomList.transform.childCount; k++)
         {
             Destroy(RoomList.transform.GetChild(k).gameObject);
-        }
+        }        
         //print(roomList.Count);
         for (int k = 0; k < roomList.Count; k++)
         {
@@ -265,7 +276,60 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinRoom(room_name);
     }
 
+    public void JoinDirectRoomButtonClickInJoinPanel()
+    {
+        string room_name = DirectRoomName.GetComponent<TMP_InputField>().text;
+        if (room_name == "")
+        {
+            StartCoroutine(PopJoinErrorMsg("참가 실패", "방 이름을 입력해주세요."));
+        }
+        else
+            PhotonNetwork.JoinRoom(room_name);
+    }
 
+    public override void OnJoinedRoom()
+    {
+        InRoomPanel.SetActive(true);
+        LobbyPanel.SetActive(false);
+        JoinRoomPanel.SetActive(false);
+        RoomNameInRoomPanel.text = PhotonNetwork.CurrentRoom.Name;
+        update_room_member();
+        delete_chat_log();
+    }
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        StartCoroutine(PopJoinErrorMsg("생성 실패", message));
+    }
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        StartCoroutine(PopJoinErrorMsg("참가 실패", message));
+    }
+
+    IEnumerator PopJoinErrorMsg(string error_type, string error_msg)
+    {
+        float timer = 0f;
+        ErrorPop.SetActive(true);
+        ErrorPop.transform.GetChild(2).GetComponent<TMP_Text>().text = error_type;
+        ErrorPop.transform.GetChild(3).GetComponent<TMP_Text>().text = error_msg;
+        while (true)
+        {
+            if(timer > ShowErrorTime)
+            {
+                break;
+            }
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        ErrorPop.SetActive(false);
+    }
+
+    #endregion
+
+    #endregion
+    #region 방
+
+    #region 방안
     public void LeaveRoomButtonClick()
     {
         PhotonNetwork.LeaveRoom();        
@@ -273,16 +337,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         LobbyPanel.SetActive(true);
         ChatInputField.text = "";
         ready_in_room(false);
-    }  
-
-    void turn_on_buttons(bool onoff)
-    {
-        for (int k = 0; k < LobbyButtonList.transform.childCount; k++)
-        {
-            if (k == 2) continue;
-            LobbyButtonList.transform.GetChild(k).transform.GetComponent<Button>().interactable = onoff;
-        }
     }
+
+    void delete_chat_log()
+    {
+        for (int k = 0; k < ChatLogList.transform.childCount; k++)
+        {
+            Destroy(ChatLogList.transform.GetChild(k).gameObject);
+        }
+        ChatInputField.text = "";
+    }
+    
 
     public void ReadyButtonClick()
     {        
@@ -296,9 +361,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             PV.RPC("start_game_in_room", RpcTarget.All);
         }
     }
+    #endregion
     
-    
-
+    void turn_on_buttons(bool onoff)
+    {
+        for (int k = 0; k < LobbyButtonList.transform.childCount; k++)
+        {
+            if (k == 2) continue;
+            LobbyButtonList.transform.GetChild(k).transform.GetComponent<Button>().interactable = onoff;
+        }
+    }
     [PunRPC]
     void send_message(string msg)
     {        
@@ -340,34 +412,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         WaitCanvas.SetActive(false);
         GameCanvas.SetActive(true);  
     }
+    #endregion
 
-
-    public void CloseButtonClick()
-    {
-        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
-        current_clicked_button.transform.parent.gameObject.SetActive(false);
-    }
-
-
-    public void OptionButtonClick()
-    {
-        OptionPanel.SetActive(!OptionPanel.activeSelf);
-    }
-
-    public void SelectResolution()
-    {
-        
-        string selected_resolution_string = Resolution.options[Resolution.value].text;
-        print(selected_resolution_string);
-        string[] selected_resolution = selected_resolution_string.Split(" x ");
-        Screen.SetResolution(int.Parse(selected_resolution[0]), int.Parse(selected_resolution[1]), false);
-        
-    }
-
-    public void ManualButtonClick()
-    {
-        ManualPanel.SetActive(true);
-    }
+    
 }
 
 
