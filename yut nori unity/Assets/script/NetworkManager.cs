@@ -68,7 +68,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void Awake()
     {
+#if UNITY_ANDROID
+        Screen.SetResolution(1920, 1080, false);
+#else
         Screen.SetResolution(960, 540, false);
+#endif
     }
     void Start()
     {
@@ -114,24 +118,76 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             ChatInputField.text = "";            
             ChatInputField.ActivateInputField();
         }
-
-
     }
 
-    #region ·Î±×ÀÎ
+#region ·Î±×ÀÎ
     public void ConnectButtonClick()
     {
         Connecting = true;
         Disconnecting = false;
         PhotonNetwork.ConnectUsingSettings();        
-
     }
+
+    /*bool IsKorean(char ch)
+    {
+        if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E))
+            return true;
+        else
+            return false;
+    }
+    bool IsEnglish(char ch)
+    {
+        if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A))
+            return true;
+        else
+            return false;
+    }
+    bool IsNumeric(char ch)
+    {
+        if (0x30 <= ch && ch <= 0x39)
+            return true;
+        else
+            return false;
+    }
+    //Çã¿ëÇÏ´Â ¹®ÀÚ
+    bool IsAllowedCharacter(char ch, string allowedCharacters)
+    {
+        return allowedCharacters.Contains(ch);        
+    }
+
+    void CkeckString()
+    {
+        string s = NickNameInput.text;
+        //"ÇÑ±Û¤¡¤¤¤¿¤Ã¤¢¤¼ÆRabcDEF~!@#$%^&*()_+|-=\\{}[]'\";:,.<>/? ";
+        string allowCharacters = "-_[]()";
+        for (int i = 0; i < s.Length; i++)
+        {
+            if (IsKorean(s[i]) == true)
+            {
+                print(s[i].ToString() + "  kor");
+            }
+            else if (IsEnglish(s[i]) == true)
+            {
+                print(s[i].ToString() + "   eng");
+            }
+            else if (IsNumeric(s[i]) == true)
+            {
+                print(s[i].ToString() + "   num");
+            }
+            else if (IsAllowedCharacter(s[i], allowCharacters) == true)
+            {
+                print(s[i].ToString() + "   allow");
+            }
+            else            {
+                print(s[i].ToString() + "   unknown-----------");
+            }
+        }
+    }*/
 
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.LocalPlayer.NickName = NickNameInput.text;
-        PhotonNetwork.JoinLobby();        
-
+        PhotonNetwork.JoinLobby();
     }
 
     public override void OnJoinedLobby()
@@ -184,19 +240,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         ManualPanel.SetActive(true);
     }
 
-    #endregion
+#endregion
 
 
-    #region ·Îºñ
-    #region ¹æ »ý¼º
+#region ·Îºñ
+#region ¹æ »ý¼º
     public void CreateRoomButtonClickInLobby()
     {
         CreateRoomPanel.SetActive(true);
     }
     public void CreateRoomButtonClickInPanel()
     {
-        PhotonNetwork.CreateRoom(RoomNameToCreat.text, new RoomOptions { MaxPlayers = 2 });
-        CreateRoomPanel.SetActive(false);
+        if (RoomNameToCreat.text == "")
+        {
+            StartCoroutine(PopErrorMsg("¹æ »ý¼º ½ÇÆÐ", "¹æ ÀÌ¸§À» ÀÔ·ÂÇØÁÖ¼¼¿ä."));
+        }
+        else
+        {
+            PhotonNetwork.CreateRoom(RoomNameToCreat.text, new RoomOptions { MaxPlayers = 2 });
+            CreateRoomPanel.SetActive(false);
+        }
         //PhotonNetwork.JoinRoom(RoomNameToCreat.text);
     }
        
@@ -212,9 +275,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "´ÔÀÌ ÅðÀåÇÏ¼Ì½À´Ï´Ù</color>");
         PV.RPC("ready_in_room", RpcTarget.AllBuffered, false);        
     }
-    #endregion
+#endregion
 
-    #region ¹æ Âü°¡
+#region ¹æ Âü°¡
     public void JoinRoomButtonClickInLobby()
     {
         JoinRoomPanel.SetActive(true);
@@ -281,7 +344,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         string room_name = DirectRoomName.GetComponent<TMP_InputField>().text;
         if (room_name == "")
         {
-            StartCoroutine(PopJoinErrorMsg("Âü°¡ ½ÇÆÐ", "¹æ ÀÌ¸§À» ÀÔ·ÂÇØÁÖ¼¼¿ä."));
+            StartCoroutine(PopErrorMsg("¹æ Âü°¡ ½ÇÆÐ", "¹æ ÀÌ¸§À» ÀÔ·ÂÇØÁÖ¼¼¿ä."));
         }
         else
             PhotonNetwork.JoinRoom(room_name);
@@ -299,37 +362,21 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
-        StartCoroutine(PopJoinErrorMsg("»ý¼º ½ÇÆÐ", message));
+        StartCoroutine(PopErrorMsg("¹æ »ý¼º ½ÇÆÐ", message));
     }
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        StartCoroutine(PopJoinErrorMsg("Âü°¡ ½ÇÆÐ", message));
+        StartCoroutine(PopErrorMsg("¹æ Âü°¡ ½ÇÆÐ", message));
     }
 
-    IEnumerator PopJoinErrorMsg(string error_type, string error_msg)
-    {
-        float timer = 0f;
-        ErrorPop.SetActive(true);
-        ErrorPop.transform.GetChild(2).GetComponent<TMP_Text>().text = error_type;
-        ErrorPop.transform.GetChild(3).GetComponent<TMP_Text>().text = error_msg;
-        while (true)
-        {
-            if(timer > ShowErrorTime)
-            {
-                break;
-            }
-            timer += Time.deltaTime;
-            yield return null;
-        }
-        ErrorPop.SetActive(false);
-    }
+    
 
-    #endregion
+#endregion
 
-    #endregion
-    #region ¹æ
+#endregion
+#region ¹æ
 
-    #region ¹æ¾È
+#region ¹æ¾È
     public void LeaveRoomButtonClick()
     {
         PhotonNetwork.LeaveRoom();        
@@ -361,7 +408,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             PV.RPC("start_game_in_room", RpcTarget.All);
         }
     }
-    #endregion
+#endregion
     
     void turn_on_buttons(bool onoff)
     {
@@ -412,9 +459,25 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         WaitCanvas.SetActive(false);
         GameCanvas.SetActive(true);  
     }
-    #endregion
+#endregion
 
-    
+    IEnumerator PopErrorMsg(string error_type, string error_msg)
+    {
+        float timer = 0f;
+        ErrorPop.SetActive(true);
+        ErrorPop.transform.GetChild(2).GetComponent<TMP_Text>().text = error_type;
+        ErrorPop.transform.GetChild(3).GetComponent<TMP_Text>().text = error_msg;
+        while (true)
+        {
+            if (timer > ShowErrorTime)
+            {
+                break;
+            }
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        ErrorPop.SetActive(false);
+    }
 }
 
 
