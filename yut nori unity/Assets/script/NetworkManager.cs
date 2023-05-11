@@ -63,6 +63,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public PhotonView PV;
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
+    public GameObject InGame;
 
     
 
@@ -77,8 +78,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void Start()
     {
         WaitCanvas.SetActive(true);
+        InGame.SetActive(false);
         GameCanvas.SetActive(false);
-
+        
         LoginPanel.SetActive(true);
         LobbyPanel.SetActive(false);
         CreateRoomPanel.SetActive(false);
@@ -86,7 +88,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         JoinRoomPanel.SetActive(false);
         OptionPanel.SetActive(false);
         ManualPanel.SetActive(false);
-        ErrorPop.SetActive(false);
+        ErrorPop.SetActive(false);        
     }
 
     // Update is called once per frame
@@ -101,7 +103,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             DisconnectButtonText.text = PhotonNetwork.NetworkClientState.ToString();
         }
 
-        //print("In lobby player list : " + PhotonNetwork.PlayerList.Length); // 룸에 있는 플레이어 리스트
+        //print("In room player list : " + PhotonNetwork.PlayerList.Length); // 룸에 있는 플레이어 리스트
         //print("In lobby count of players : " + PhotonNetwork.CountOfPlayers);// 전체 플레이어 수
         
         if(CreateRoomPanel.activeSelf || InRoomPanel.activeSelf || JoinRoomPanel.activeSelf)
@@ -457,7 +459,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void start_game_in_room()
     {
         WaitCanvas.SetActive(false);
-        GameCanvas.SetActive(true);  
+        GameCanvas.SetActive(true);
+        InGame.SetActive(true);
     }
 #endregion
 
