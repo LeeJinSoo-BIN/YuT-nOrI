@@ -155,7 +155,9 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Standalone: com.DefaultCompany.2DProject
+    Android: com.BINARY.YutNori
+    Standalone: com.BINARY.YutNori
+    iPhone: com.BINARY.YutNori
   buildNumber:
     Standalone: 0
     iPhone: 0

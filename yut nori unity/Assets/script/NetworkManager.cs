@@ -6,6 +6,7 @@ using Photon.Realtime;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using UnityEngine.Audio;
 
 
 public class NetworkManager : MonoBehaviourPunCallbacks
@@ -27,7 +28,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public TMP_Dropdown Resolution;
     
     public GameObject ManualPanel;
+    public GameObject EspList;    
     public GameObject ErrorPop;
+    public AudioMixer audioMixer;
+    public Slider BgmSlider;
+    public Slider SfxSlider;    
+    private string[] EspTooltip = new string[] {
+                                                "¹âÀ¸¸é Ãâ¹ß ÀÌÀüÀ¸·Î µ¹¾Æ°¡´Â ÆøÅºÀ» ¼³Ä¡ÇÑ´Ù. ÆøÅº¿£ ÇÇ¾Æ±¸ºĞÀÌ ¾ø´Ù. Áö³ªÃÄ°¡µµ ¹ßµ¿ÇÑ´Ù.", //0. Äâ±¤!
+                                                "»ó´ë¹æÀÇ ¸» ÇÏ³ª¸¦ Ãâ¹ß ÀÌÀüÀ¸·Î µ¹·Áº¸³½´Ù. ½×ÀÎ ¸»ÀÌ ÀÖ´õ¶óµµ ÇÏ³ª¸¸ µ¹·Áº¸³½´Ù.", //1. ¾È µÅ. µ¹¾Æ°¡.
+                                                "À·ÀÌ ¾Æ´Ñ ÁÖ»çÀ§¸¦ 2°³ ±¼¸°´Ù. °¢ ÁÖ»çÀ§ÀÇ ´«¿¡ ¾Ë¸Â´Â À·À¸·Î Ãë±ŞÇÑ´Ù.(6Àº µŞµµ)\n´õºíÀÌ ³ª¿À¸é ÇÑ ¹ø ´õ ±¼¸± ¼ö ÀÖ°í, ±× ÈÄ ¸»À» ¿òÁ÷ÀÏ ¼ö ÀÖ´Ù.", //2. ¼­¾ç¹®¹°
+                                                "»ó´ë Â÷·Ê¸¦ 1¹ø °Ç³Ê¶Ú´Ù.",//3. ¹«ÀÎµµ
+                                                "ÀÌ¹ø Â÷·Ê¿¡ ´øÁö´Â À·À» ¸ğµÎ ´ÙÀ½ Â÷·Ê¿¡ »ç¿ëÇÑ´Ù. ÅµÇÑ À·Àº ´ÙÀ½ÅÏ¿¡ À·À» ±¼·Á¾ß »ç¿ëÇÒ ¼ö ÀÖ´Ù.", //4. ÅµÀÌ¿ä.
+                                                "¸»À» ÇÏ³ª ¾ñ¾î¼­ Ãâ¹ßÇÑ´Ù. Ãâ¹ß °¡´ÉÇÑ ¸» 2°³ ÀÌ»óÀÌ ³²¾Æ ÀÖ¾î¾ß È°¼ºÈ­ °¡´ÉÇÏ¸ç, È°¼ºÈ­ ÈÄ À·À» ±¼¸®°í ½ÃÀÛ¸»À» ¿òÁ÷ÀÌ¸é »ç¿ëµÈ´Ù. ÀÌ¹Ì ³ª¿ÍÁ® ÀÖ´Â ¸»À» ¿òÁ÷ÀÌ¸é »ç¿ëÀÌ Ãë¼ÒµÈ´Ù.", //5. ºÎÁ¤Ãâ¹ß
+                                                "»ó´ëÀÇ ¸» ÇÏ³ª¿Í ³» ¸»ÇÏ³ªÀÇ À§Ä¡¸¦ ¹Ù²Û´Ù. ½×ÀÎ ¸»ÀÌ ÀÖÀ¸¸é ¸ğµÎ ¹Ù²ï´Ù.",//6. ÃÊµ¿¿ªÇĞÀ§Ä¡ÀüÈ¯±â
+                                                "ÀÌ¹ø Â÷·Ê¿¡ Ã³À½ ±¼¸° À·À» º¹»çÇÑ´Ù.",//7. ¸ŞÅ¸¸ù
+                                                "ÀÌ¹ø Â÷·Ê¿¡ ´øÁö´Â À·À» ¸ğµÎ °Å²Ù·Î ¿òÁ÷ÀÎ´Ù.", //8. ¹®¿öÅ©
+                                                "¹âÀ¸¸é °ñÀÎÄ­À¸·Î µé¾î°¡´Â Æ÷Å»À» ¼³Ä¡ÇÑ´Ù. Æ÷Å»¿£ ÇÇ¾Æ±¸ºĞÀÌ ¾ø´Ù. Áö³ªÃÄ°¡µµ ¹ßµ¿ÇÑ´Ù.", //9. ÁıÀ¸·Î
+                                                "»ó´ë¹æÀÇ ´É·ÂÀ» µû¶óÇÑ´Ù. »ó´ë¹æÀÌ ´É·ÂÀ» ¾²±â Àü¿¡µµ »ç¿ëÇÒ ¼ö ÀÖ´Ù.", //10. µû¶óÅ¥
+                                                "»ó´ë¹æ ¸» ÇÏ³ª¸¦ °ñ¶ó ÀÚ½ÅÀÇ ¸» ÁÖÀ§ 1Ä­¿¡ ÀÌµ¿½ÃÅ²´Ù. ¹İ´ë·Îµµ °¡´ÉÇÏ´Ù. ¸ÕÀú ¼±ÅÃÇÑ ¸»À» µÎ¹øÂ° ¼±ÅÃÇÑ ¸»ÀÇ ÁÖÀ§·Î ÀÌµ¿½ÃÅ²´Ù. ÀÌµ¿ ½ÃÅ°·Á´Â °÷¿¡ ¸»ÀÌ ÀÖ´Ù¸é, ÀÚ½ÅÀÇ ¸» À§¿¡¸¸ ÀÌµ¿ °¡´ÉÇÏ´Ù.",// 11. ¹Ğ°í ´ç±â±â
+                                                "ÀÌ¹ø Â÷·Ê¿¡ ´øÁö´Â À·ÀÌ Á¤ÇØÁø À·À¸·Î ³ª¿Â´Ù.\nµµ °³ °É À· ¸ğ µŞµµ ¸ğµç À·µé Áß ÇÏ³ª·Î Á¤ÇØÁø´Ù."
+                                                };
 
     [Header("·Îºñ")]
     public GameObject LobbyPanel;
@@ -52,6 +72,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Button StartButton;
     public Button ReadyButton;
     public GameObject ReadyInRoomPanel;
+    public GameObject MalBox;
 
     [Header("¹æ Âü°¡")]
     public GameObject JoinRoomPanel;
@@ -64,6 +85,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject WaitCanvas;
     public GameObject GameCanvas;
     public GameObject InGame;
+    public GameObject BackGround;
+    public GameObject GameEndPop;
 
     
 
@@ -80,7 +103,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         WaitCanvas.SetActive(true);
         InGame.SetActive(false);
         GameCanvas.SetActive(false);
-        
+
+        SetBgmVolume();
+        SetSfxVolume();
+
         LoginPanel.SetActive(true);
         LobbyPanel.SetActive(false);
         CreateRoomPanel.SetActive(false);
@@ -88,7 +114,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         JoinRoomPanel.SetActive(false);
         OptionPanel.SetActive(false);
         ManualPanel.SetActive(false);
-        ErrorPop.SetActive(false);        
+        ErrorPop.SetActive(false);
+        EspList.SetActive(false);
     }
 
     // Update is called once per frame
@@ -120,71 +147,28 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             ChatInputField.text = "";            
             ChatInputField.ActivateInputField();
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {           
+            OptionButtonClick();
+        }
+        
     }
 
-#region ·Î±×ÀÎ
+    #region ½ÃÀÛ È­¸é
+    #region ·Î±×ÀÎ
     public void ConnectButtonClick()
     {
+        if(NickNameInput.text == "")
+        {
+            StartCoroutine(PopErrorMsg("Á¢¼Ó ½ÇÆĞ", "´Ğ³×ÀÓÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä."));
+            return;
+        }
         Connecting = true;
         Disconnecting = false;
         PhotonNetwork.ConnectUsingSettings();        
     }
-
-    /*bool IsKorean(char ch)
-    {
-        if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E))
-            return true;
-        else
-            return false;
-    }
-    bool IsEnglish(char ch)
-    {
-        if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A))
-            return true;
-        else
-            return false;
-    }
-    bool IsNumeric(char ch)
-    {
-        if (0x30 <= ch && ch <= 0x39)
-            return true;
-        else
-            return false;
-    }
-    //Çã¿ëÇÏ´Â ¹®ÀÚ
-    bool IsAllowedCharacter(char ch, string allowedCharacters)
-    {
-        return allowedCharacters.Contains(ch);        
-    }
-
-    void CkeckString()
-    {
-        string s = NickNameInput.text;
-        //"ÇÑ±Û¤¡¤¤¤¿¤Ã¤¢¤¼ÆRabcDEF~!@#$%^&*()_+|-=\\{}[]'\";:,.<>/? ";
-        string allowCharacters = "-_[]()";
-        for (int i = 0; i < s.Length; i++)
-        {
-            if (IsKorean(s[i]) == true)
-            {
-                print(s[i].ToString() + "  kor");
-            }
-            else if (IsEnglish(s[i]) == true)
-            {
-                print(s[i].ToString() + "   eng");
-            }
-            else if (IsNumeric(s[i]) == true)
-            {
-                print(s[i].ToString() + "   num");
-            }
-            else if (IsAllowedCharacter(s[i], allowCharacters) == true)
-            {
-                print(s[i].ToString() + "   allow");
-            }
-            else            {
-                print(s[i].ToString() + "   unknown-----------");
-            }
-        }
-    }*/
+        
 
     public override void OnConnectedToMaster()
     {
@@ -217,13 +201,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         LoginPanel.SetActive(true);
         LobbyPanel.SetActive(false);
     }
+    #endregion
 
-    public void CloseButtonClick()
-    {
-        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
-        current_clicked_button.transform.parent.gameObject.SetActive(false);
-    }
-
+    #region ¿É¼Ç
     public void OptionButtonClick()
     {
         OptionPanel.SetActive(!OptionPanel.activeSelf);
@@ -237,16 +217,60 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         Screen.SetResolution(int.Parse(selected_resolution[0]), int.Parse(selected_resolution[1]), false);
     }
 
+    public void SetBgmVolume()
+    {
+        audioMixer.SetFloat("BGM volume", Mathf.Log10(BgmSlider.value) * 20);
+    }
+    public void SetSfxVolume()
+    {
+        audioMixer.SetFloat("SFX volume", Mathf.Log10(SfxSlider.value) * 20);
+    }
+    #endregion
+
+    #region °ÔÀÓ¼³¸í
     public void ManualButtonClick()
     {
         ManualPanel.SetActive(true);
+        EspList.SetActive(false);
+        ManualPanel.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "ÃÊ´É·Â ¼³¸í º¸±â";
     }
 
-#endregion
+    public void ClickEspToolTip()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
+        if (current_clicked_button != null)
+        {
+            int esp_num = int.Parse(current_clicked_button.name);
+            print(esp_num);
+            EspList.transform.GetChild(EspList.transform.childCount - 1).GetChild(1).GetComponent<TMP_Text>().text = EspList.transform.GetChild(esp_num + 1).GetChild(2).GetComponent<TMP_Text>().text;
+            EspList.transform.GetChild(EspList.transform.childCount - 1).GetChild(2).GetComponent<TMP_Text>().text = EspTooltip[esp_num];
+        }
+        EspList.transform.GetChild(EspList.transform.childCount - 1).gameObject.SetActive(true);
+    }
+
+    public void ClickShowEsp()
+    {
+        bool isOn = EspList.activeSelf;
+        if (isOn == false)
+        {
+            EspList.SetActive(true);
+            ManualPanel.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "µÚ·Î";
+            EspList.transform.GetChild(EspList.transform.childCount - 1).gameObject.SetActive(false);
+        }
+        else
+        {
+            EspList.SetActive(false);
+            ManualPanel.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "ÃÊ´É·Â ¼³¸í º¸±â";
+            EspList.transform.GetChild(EspList.transform.childCount - 1).gameObject.SetActive(false);
+        }
+    }
+    #endregion
+
+    #endregion
 
 
-#region ·Îºñ
-#region ¹æ »ı¼º
+    #region ·Îºñ
+    #region ¹æ »ı¼º
     public void CreateRoomButtonClickInLobby()
     {
         CreateRoomPanel.SetActive(true);
@@ -263,20 +287,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             CreateRoomPanel.SetActive(false);
         }
         //PhotonNetwork.JoinRoom(RoomNameToCreat.text);
-    }
-       
+    }       
     
-    public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        update_room_member();
-        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + newPlayer.NickName + "´ÔÀÌ ÀÔÀåÇÏ¼Ì½À´Ï´Ù</color>");
-    }
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
-        update_room_member();
-        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "´ÔÀÌ ÅğÀåÇÏ¼Ì½À´Ï´Ù</color>");
-        PV.RPC("ready_in_room", RpcTarget.AllBuffered, false);        
-    }
+    
 #endregion
 
 #region ¹æ Âü°¡
@@ -326,6 +339,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if (roomList[k].RemovedFromList) continue;
             GameObject Room = Instantiate(RoomInfo);
             Room.transform.SetParent(RoomList.transform);
+            Room.transform.localScale = new Vector3(1, 1, 1);
             Room.SetActive(true);
             Room.transform.GetChild(0).GetComponent<TMP_Text>().text = roomList[k].Name;
             string count = roomList[k].PlayerCount + " / " + roomList[k].MaxPlayers;
@@ -457,12 +471,35 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     [PunRPC]
     void start_game_in_room()
-    {
-        WaitCanvas.SetActive(false);
+    {        
+        InRoomPanel.SetActive(false);
+        BackGround.SetActive(false);
         GameCanvas.SetActive(true);
         InGame.SetActive(true);
     }
-#endregion
+
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        update_room_member();
+        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + newPlayer.NickName + "´ÔÀÌ ÀÔÀåÇÏ¼Ì½À´Ï´Ù</color>");
+    }
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        update_room_member();
+        PV.RPC("send_message", RpcTarget.All, "<color=yellow>" + otherPlayer.NickName + "´ÔÀÌ ÅğÀåÇÏ¼Ì½À´Ï´Ù</color>");
+        PV.RPC("ready_in_room", RpcTarget.AllBuffered, false);
+        if (InGame.activeSelf)
+        {
+            GameEndPop.transform.GetChild(0).GetComponent<TMP_Text>().text = "½Â¸®!!";
+            GameEndPop.transform.GetChild(3).gameObject.SetActive(true);
+            for (int t = 2; t < MalBox.transform.childCount; t++)
+            {
+                Destroy(MalBox.transform.GetChild(t).gameObject);
+            }
+            GameEndPop.SetActive(true);
+        }
+    }
+    #endregion
 
     IEnumerator PopErrorMsg(string error_type, string error_msg)
     {
@@ -480,6 +517,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             yield return null;
         }
         ErrorPop.SetActive(false);
+    }
+
+    public void CloseButtonClick()
+    {
+        GameObject current_clicked_button = EventSystem.current.currentSelectedGameObject;
+        current_clicked_button.transform.parent.gameObject.SetActive(false);
     }
 }
 

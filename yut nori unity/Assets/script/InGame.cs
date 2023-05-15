@@ -17,6 +17,10 @@ public class InGame : MonoBehaviourPunCallbacks
     public Sprite[] ESP_sprite;
     public Sprite[] Esp_Dice_sprite;
     private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!", "µµÂø!" };
+    public AudioClip[] RollSound;    
+    public AudioSource SFXPlayer;
+    public AudioSource BGMPlayer;
+    public AudioClip[] BGMs;
     private Color[] YutColor = new Color[] { new Color(255 / 255f, 223 / 255f, 206 / 255f, 1f),
                                             new Color(255 / 255f, 170 / 255f, 90 / 255f, 1f),
                                             new Color(222 / 255f, 219 / 255f, 236 / 255f, 1f),
@@ -108,8 +112,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public int MyEsp1;
     public int MyEsp2;
     public int OpEsp1;
-    public int OpEsp2;
-    private int LoopEspShowCnt = 4;
+    public int OpEsp2;    
     public float EspPopTime = 0.02f;
     public float EspPopSlowDown = 1.2f;
     private bool EspDone = false;
@@ -134,7 +137,8 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEspMimikyuUsed = false;
     private bool IsEspMoonWalkUsing = false;
     private bool WhoUsedMimikyu;
-
+    public int LoopEspShowCnt = 3;
+    public AudioClip[] EspSound;
 
     [Header("Turn")]
     public GameObject PopTurn;
@@ -148,11 +152,12 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject Ready;
     public GameObject GameStart;
     public bool GameStarted = false;
-    public GameObject WaitCanvas;
+    public GameObject InRoomPanel;
+    public GameObject BackGround;
     public GameObject GameCanvas;
 
     public PhotonView PV;
-
+    
     #endregion
 
     void Awake()
@@ -338,6 +343,11 @@ public class InGame : MonoBehaviourPunCallbacks
         RollingYut.transform.GetChild(3).gameObject.SetActive(false);
         CurrentYut = rolled_yut;
         IsEsp2Using = esp2using;
+        int roll_sound = Random.Range(0, 3);
+        if (rolled_yut == 6)
+            roll_sound = 3;
+        SFXPlayer.clip = RollSound[roll_sound];
+        SFXPlayer.Play();
         if (IsEsp2Using)
         {
             if (MyTurn)
@@ -417,6 +427,8 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
         RollingDice.SetActive(true);
+        SFXPlayer.clip = RollSound[4];
+        SFXPlayer.Play();
         for (int k = 0; k < 10; k++)
         {
             int rand_dice1 = Random.Range(0, 6);
@@ -1514,8 +1526,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 return;
             }
             else if (trap_type == 2)
-            {
-                
+            {                
                 moved_mal.transform.position = Caan.transform.GetChild(0).transform.position + new Vector3(0f, 0.15f);
                 moved_mal.transform.GetChild(2).name = "0";
                 int[] trap_pos = where_is_trap();
@@ -1602,6 +1613,7 @@ public class InGame : MonoBehaviourPunCallbacks
                             Destroy(MalBox.transform.GetChild(t).gameObject);
                         }
                         GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "½Â¸®!!";
+                        GameEnd.transform.GetChild(3).gameObject.SetActive(false);
                         GameEnd.SetActive(true);
                     }
                 }
@@ -1630,6 +1642,7 @@ public class InGame : MonoBehaviourPunCallbacks
                             Destroy(MalBox.transform.GetChild(t).gameObject);
                         }
                         GameEnd.transform.GetChild(0).GetComponent<TMP_Text>().text = "ÆÐ¹è ¤Ì¤Ì";
+                        GameEnd.transform.GetChild(3).gameObject.SetActive(false);
                         GameEnd.SetActive(true);
                     }
                 }
@@ -1828,6 +1841,11 @@ public class InGame : MonoBehaviourPunCallbacks
             Caan.transform.GetChild(0).GetChild(trap_type).gameObject.SetActive(true);
         current_planting_trap.GetComponent<Button>().interactable = false;
         on_off_caan_trap(trap_type, false, trap_pos);
+        int[] type = { 0, 0, 9 };
+        int[] esp_stack = { type[trap_type] };        
+        string[] trap = { "", "ÄâÄç!", "ÁýÀ¸·Î" };
+        string[] ment = { trap[trap_type]};
+        StartCoroutine(show_esp_used(esp_stack, ment, false));
     }
 
     IEnumerator show_esp_used(int[] src_esp_stack, string[] src_ment, bool end)
@@ -2717,9 +2735,11 @@ public class InGame : MonoBehaviourPunCallbacks
     }
     [PunRPC]
     void start_game()
-    {
-        
+    {        
         print("Prepare Game");
+        BGMPlayer.Stop();
+        BGMPlayer.clip = BGMs[1];
+        BGMPlayer.Play();
         MyTurnSign = MyInfoList.transform.GetChild(0).gameObject;
         MyName = MyInfoList.transform.GetChild(2).GetComponent<TMP_Text>();
         MyStartMalList = MyInfoList.transform.GetChild(3).gameObject;
@@ -2764,7 +2784,6 @@ public class InGame : MonoBehaviourPunCallbacks
             int slave_esp2 = Random.Range(0, 6);
             while (master_esp2 == slave_esp2)
                 master_esp2 = Random.Range(0, 6);
-
             
             PV.RPC("set_turn_and_character_and_esp", RpcTarget.All, turn, master_mal, slave__mal, master_esp1, slave_esp1, master_esp2, slave_esp2);            
         }
@@ -2851,6 +2870,7 @@ public class InGame : MonoBehaviourPunCallbacks
         OpEspTooltipBox.transform.GetChild(1).GetChild(1).GetComponent<TMP_Text>().text = EspTooltip[ESPList.transform.childCount - 6 + OpEsp2];
     }
 
+  
     IEnumerator Show_ESP_Choose(int esp1, int esp2)
     {
         print("select Esp");
@@ -2865,7 +2885,8 @@ public class InGame : MonoBehaviourPunCallbacks
                     ESPList.transform.GetChild(ESPList.transform.childCount - 6 - 1).GetChild(3).gameObject.SetActive(false);
                 else
                     ESPList.transform.GetChild(k - 1).GetChild(3).gameObject.SetActive(false);
-
+                SFXPlayer.clip = EspSound[0];
+                SFXPlayer.Play();
                 float timer = 0f;
                 while (true)
                 {
@@ -2880,7 +2901,16 @@ public class InGame : MonoBehaviourPunCallbacks
                     slow_down++;
             }            
         }
-
+        SFXPlayer.clip = EspSound[1];
+        SFXPlayer.Play();
+        float timer2 = 0;
+        while (true)
+        {
+            timer2 += Time.deltaTime;
+            if (timer2 > 0.45)
+                break;
+            yield return null;
+        }
         slow_down = 1;
         for (int t = 0; t < LoopEspShowCnt; t++)
         {
@@ -2891,7 +2921,8 @@ public class InGame : MonoBehaviourPunCallbacks
                     ESPList.transform.GetChild(ESPList.transform.childCount - 1).GetChild(3).gameObject.SetActive(false);
                 else
                     ESPList.transform.GetChild(k - 1).GetChild(3).gameObject.SetActive(false);
-
+                SFXPlayer.clip = EspSound[0];
+                SFXPlayer.Play();
                 float timer = 0f;
                 while (true)
                 {
@@ -2906,7 +2937,9 @@ public class InGame : MonoBehaviourPunCallbacks
                     slow_down++;
             }            
         }
-        float timer2 = 0;        
+        SFXPlayer.clip = EspSound[1];
+        SFXPlayer.Play();
+        timer2 = 0;        
         while (true)
         {
             timer2 += Time.deltaTime;
@@ -2918,6 +2951,7 @@ public class InGame : MonoBehaviourPunCallbacks
         MyEspList.transform.GetChild(2).GetComponent<Image>().sprite = ESP_sprite[ESPList.transform.childCount - 6 + esp2];        
         PV.RPC("set_esp_done", RpcTarget.All);
         print("set_esp_done");
+
     }
 
     [PunRPC]
@@ -2984,9 +3018,7 @@ public class InGame : MonoBehaviourPunCallbacks
             if (!IsEsp1Used)
                 MyEspList.transform.GetChild(1).GetComponent<Button>().interactable = true;
             if (!IsEsp2Used)
-                MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = true;
-
-            
+                MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = true;            
 
         }
         WaitChanging = false;
@@ -3187,11 +3219,15 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
     void end_game()
-    {
-        WaitCanvas.SetActive(true);
+    {        
+        InRoomPanel.SetActive(true);
+        BackGround.SetActive(true);
         GameCanvas.SetActive(false);
         GameStarted = false;
         Clear();
+        BGMPlayer.Stop();
+        BGMPlayer.clip = BGMs[0];
+        BGMPlayer.Play();
     }
 
     #endregion
