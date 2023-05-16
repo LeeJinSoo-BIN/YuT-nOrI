@@ -17094,7 +17094,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &454912900
 Transform:
   m_ObjectHideFlags: 0
@@ -29448,6 +29448,7 @@ MonoBehaviour:
   audioMixer: {fileID: 24100000, guid: 4ccfb03fa579dc846beb87d4a02d2ce8, type: 2}
   BgmSlider: {fileID: 838595322}
   SfxSlider: {fileID: 1877187526}
+  CreditPanel: {fileID: 1978723424}
   LobbyPanel: {fileID: 676008255}
   DisconnectButtonText: {fileID: 236317444}
   LobbyButtonList: {fileID: 2128931925}
@@ -35721,7 +35722,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &967222415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57510,7 +57511,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 799995118}
         m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
-        m_MethodName: ManualButtonClick
+        m_MethodName: ClickCredit
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -66938,7 +66939,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 550, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1946548079
 MonoBehaviour:
@@ -66960,7 +66961,13 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC774\uBBF8\uC9C0\n\n\uC74C\uC545"
+  m_text: "\uC774\uBBF8\uC9C0\nhttps://www.flaticon.com/kr/authors/freepik\n---------------------------------------------------------------\n\uC74C\uC545\n\uB85C\uBE44
+    -  Happy and Joyful Children by Free Music | https://soundcloud.com/fm_freemusic
+    \n\uC778\uAC8C\uC784 -  Forest of dreams by Olexy | https://lesfm.net/\nMusic
+    promoted by https://www.chosic.com/free-music/all/\nCreative Commons CC BY 3.0
+    https://creativecommons.org/licenses/by/3.0/\n----------------------------------------------------------------\n\uD6A8\uACFC\uC74C\n\uC737,
+    \uC8FC\uC0AC\uC704 \uC18C\uB9AC - \uC720\uD29C\uBE0C \uCC44\uB110 https://www.youtube.com/@mpooman\n\uAE30\uD0C0
+    \uD6A8\uACFC\uC74C - \uC720\uD29C\uBE0C \uCC44\uB110 https://www.youtube.com/@DayDreamSound"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7e57d6b3c37270c4f8a7f0b85f8b481c, type: 2}
   m_sharedMaterial: {fileID: 4782381931708401835, guid: 7e57d6b3c37270c4f8a7f0b85f8b481c, type: 2}
@@ -66969,8 +66976,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -66987,15 +66994,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 15
+  m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -67732,8 +67739,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -30}
-  m_SizeDelta: {x: 600, y: 350}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 600, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1978723426
 MonoBehaviour:

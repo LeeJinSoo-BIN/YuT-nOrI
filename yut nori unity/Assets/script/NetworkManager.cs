@@ -49,6 +49,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                                                 "이번 차례에 던지는 윷이 정해진 윷으로 나온다.\n도 개 걸 윷 모 뒷도 모든 윷들 중 하나로 정해진다."
                                                 };
 
+    public GameObject CreditPanel;
+
     [Header("로비")]
     public GameObject LobbyPanel;
     public TMP_Text DisconnectButtonText;
@@ -87,7 +89,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject InGame;
     public GameObject BackGround;
     public GameObject GameEndPop;
-
+    
     
 
     private void Awake()
@@ -263,6 +265,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             ManualPanel.transform.GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = "초능력 설명 보기";
             EspList.transform.GetChild(EspList.transform.childCount - 1).gameObject.SetActive(false);
         }
+    }
+
+    public void ClickCredit()
+    {
+        CreditPanel.SetActive(true);
     }
     #endregion
 

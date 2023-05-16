@@ -91,9 +91,6 @@
 ### 초능력
 ---
 
-## 구현중
-
-<br>
 <img src="readme img/esp list.png">
 
 <br>
@@ -148,6 +145,16 @@
 <br>
 <br>
 
-#### 이미지 출처
+#### 이미지 및 음악 출처
 ---
-https://www.flaticon.com/kr/authors/freepik
+이미지 <br>
+<a href="https://www.flaticon.com/kr/free-icons/-" title="공개 등록 아이콘">공개 등록 아이콘  제작자: Freepik - Flaticon</a> <br>
+
+배경음악 및 효과음 <br>
+ 로비 -  Happy and Joyful Children by Free Music | https://soundcloud.com/fm_freemusic <br>
+ 인게임 -  Forest of dreams by Olexy | https://lesfm.net/ <br>
+Music promoted by https://www.chosic.com/free-music/all/ <br>
+Creative Commons CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+
+ 윷, 주사위 소리 https://www.youtube.com/@mpooman
+
