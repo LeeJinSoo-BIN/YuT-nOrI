@@ -17,7 +17,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public Sprite[] ESP_sprite;
     public Sprite[] Esp_Dice_sprite;
     private string[] YutHanguel = new string[] { "µµ!", "°³!", "°É!", "Àµ!", "¸ð!", "µÞµµ!", "³«!", "µµÂø!" };
-    public AudioClip[] RollSound;    
+    public AudioClip[] RollSound;
     public AudioSource SFXPlayer;
     public AudioSource BGMPlayer;
     public AudioClip[] BGMs;
@@ -112,13 +112,13 @@ public class InGame : MonoBehaviourPunCallbacks
     public int MyEsp1;
     public int MyEsp2;
     public int OpEsp1;
-    public int OpEsp2;    
+    public int OpEsp2;
     public float EspPopTime = 0.02f;
     public float EspPopSlowDown = 1.2f;
     private bool EspDone = false;
     private bool IsEsp1Using = false;
     private bool IsEsp2Using = false;
-    private bool IsEsp1Used = false;    
+    private bool IsEsp1Used = false;
     private bool IsEsp2Used = false;
     private bool IsRolled = false;
     private int[] TrapType = new int[] { 1, 2 }; // 1 == ÄâÄç, 2 == ÁýÀ¸·Î
@@ -139,6 +139,7 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool WhoUsedMimikyu;
     public int LoopEspShowCnt = 3;
     public AudioClip[] EspSound;
+    public bool WhoUsedEsp;
 
     [Header("Turn")]
     public GameObject PopTurn;
@@ -157,7 +158,7 @@ public class InGame : MonoBehaviourPunCallbacks
     public GameObject GameCanvas;
 
     public PhotonView PV;
-    
+
     #endregion
 
     void Awake()
@@ -184,7 +185,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     MyEspList.transform.GetChild(1).GetComponent<Button>().interactable = false;
                     MyEspList.transform.GetChild(2).GetComponent<Button>().interactable = false;
                 }
-                
+
 
                 IsMalMovable = Check_Mal_Movable(MyYutStackList, MyStartMalList);
                 if (!IsRollable && !IsMalMovable && !IsRolling && !IsMoving && MyTurn && EspDone && !WaitChanging)
@@ -206,7 +207,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         }
                     }
                 }
-                if ((IsEspGoBackUsing  || IsEspChangePosUsing || IsEspMagnetUsing) && !IsEsp1Used)
+                if ((IsEspGoBackUsing || IsEspChangePosUsing || IsEspMagnetUsing) && !IsEsp1Used)
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
@@ -216,7 +217,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         {
                             if (hit.transform.parent.gameObject == MalBox && hit.transform.name[0] == 'O')
                             {
-                                OpMalClick(hit.transform.gameObject);                                
+                                OpMalClick(hit.transform.gameObject);
                             }
                             if (hit.transform.parent.gameObject == MalBox && hit.transform.name[0] == 'M')
                             {
@@ -273,7 +274,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     back_do++;
             }
             else if (yut == BackProbability)
-            {                
+            {
                 if (IsEspMetamongUsing)
                 {
                     while (yut != BackProbability)
@@ -331,7 +332,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         PV.RPC("roll_yut", RpcTarget.All, CurrentYut, IsEsp2Using);
     }
-    
+
     [PunRPC]
     void roll_yut(int rolled_yut, bool esp2using)
     {
@@ -366,7 +367,7 @@ public class InGame : MonoBehaviourPunCallbacks
         IsRolled = true;
         StartCoroutine(show_yut_rolling());
     }
-    
+
     IEnumerator show_yut_rolling()
     {
         float timer = 0;
@@ -395,7 +396,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
     [PunRPC]
     void roll_dice(int dice1, int dice2, bool used)
-    {        
+    {
         IsRolling = true;
         IsRollable = false;
         if (!used)
@@ -405,14 +406,14 @@ public class InGame : MonoBehaviourPunCallbacks
             StartCoroutine(show_esp_used(esp_stack, ment, false));
 
             PV.RPC("Esp1Used", RpcTarget.All);
-            if(MyTurn)
+            if (MyTurn)
                 IsEsp1Used = true;
         }
         StartCoroutine(show_dice_roll(dice1, dice2, used));
     }
 
     IEnumerator show_dice_roll(int dice1, int dice2, bool used)
-    {        
+    {
         float timer = 0;
         if (!used)
         {
@@ -488,7 +489,7 @@ public class InGame : MonoBehaviourPunCallbacks
             OpYutStackList.transform.GetChild(dice1).GetChild(2).GetComponent<TMP_Text>().text = (now_count1).ToString();
             if (now_count1 > 0)
                 OpYutStackList.transform.GetChild(dice1).GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-            
+
             int now_count2 = int.Parse(OpYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text) + 1;
             OpYutStackList.transform.GetChild(dice2).GetChild(2).GetComponent<TMP_Text>().text = (now_count2).ToString();
             if (now_count2 > 0)
@@ -504,8 +505,8 @@ public class InGame : MonoBehaviourPunCallbacks
             IsEsp1Using = false;
             click_dice();
         }
-        
-        
+
+
         IsRolling = false;
     }
 
@@ -556,7 +557,7 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         if (rolled_yut != 6) // ³«
         {
-            
+
             if (MyTurn)
             {
                 int now_count = int.Parse(MyYutStackList.transform.GetChild(rolled_yut).GetChild(2).GetComponent<TMP_Text>().text) + stack_up;
@@ -622,7 +623,7 @@ public class InGame : MonoBehaviourPunCallbacks
             }
         }
 
-        if (IsEspFalseStartUsing && (rolled_yut == 5|| rolled_yut == 6))
+        if (IsEspFalseStartUsing && (rolled_yut == 5 || rolled_yut == 6))
         {
             IsEspFalseStartUsing = false;
             if (MyTurn)
@@ -636,7 +637,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
     #endregion
 
-     #region Move
+    #region Move
     public void MyStartMalClick()
     {
         if (IsMyMovedMalClicked)
@@ -648,8 +649,8 @@ public class InGame : MonoBehaviourPunCallbacks
         if (MyClickedMovableMal == null)
             return;
         IsMyStartMalClicked = !IsMyStartMalClicked;
-        
-        
+
+
         MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(IsMyStartMalClicked);
         if (IsMyStartMalClicked)
         {
@@ -700,12 +701,12 @@ public class InGame : MonoBehaviourPunCallbacks
 
     public void MovedMalClick(GameObject clicked_moved_mal)
     {
-        IsMyMovedMalClicked = !IsMyMovedMalClicked;        
+        IsMyMovedMalClicked = !IsMyMovedMalClicked;
         if (IsMyStartMalClicked)
         {
             MyClickedMovableMal.transform.GetChild(0).gameObject.SetActive(false);
             IsMyStartMalClicked = false;
-        }        
+        }
         MyClickedMovableMal = clicked_moved_mal;
         MyClickedMovableMal.transform.GetChild(3).gameObject.SetActive(IsMyMovedMalClicked);
         if (IsMyMovedMalClicked)
@@ -745,7 +746,7 @@ public class InGame : MonoBehaviourPunCallbacks
                                 Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).gameObject.SetActive(true);
                             }
                             adj = 0;
-                        }                        
+                        }
                         else if (clicked_mal_pos == 27)
                         {
                             adj = -5;
@@ -759,7 +760,7 @@ public class InGame : MonoBehaviourPunCallbacks
                             Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).GetChild(0).name = (k).ToString();
                             Caan.transform.GetChild(clicked_mal_pos - k - 1 + adj).GetChild(0).gameObject.SetActive(true);
                             adj = 0;
-                            if(clicked_mal_pos - k - 1 + adj < 25)
+                            if (clicked_mal_pos - k - 1 + adj < 25)
                             {
                                 adj = -17;
                             }
@@ -767,7 +768,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         else if (clicked_mal_pos - k - 1 + adj < 0)
                         {
                             adj = 20;
-                        }                        
+                        }
                         else if (20 <= clicked_mal_pos && clicked_mal_pos <= 24 && clicked_mal_pos - k - 1 + adj < 20)
                         {
                             adj = -14;
@@ -776,7 +777,7 @@ public class InGame : MonoBehaviourPunCallbacks
                         {
                             adj = -14;
                         }
-                        
+
                         if (clicked_mal_pos - k - 1 + adj == 22)
                         {
                             Caan.transform.GetChild(27).GetComponent<Button>().interactable = true;
@@ -958,11 +959,11 @@ public class InGame : MonoBehaviourPunCallbacks
         if (IsEspMagnetUsing)
         {
             if (EspMagnetMovingMalIndex != -1)
-                PV.RPC("use_magnet", RpcTarget.All, EspMagnetMovingMalIndex, clicked_caan_num);            
+                PV.RPC("use_magnet", RpcTarget.All, EspMagnetMovingMalIndex, clicked_caan_num);
             return;
-        }        
+        }
         int moving_yut = int.Parse(current_clicked_caan.transform.GetChild(0).GetChild(0).name);
-        
+
         if (IsMyStartMalClicked)
         {
             turn_on_off_all_caan(false);
@@ -1130,7 +1131,7 @@ public class InGame : MonoBehaviourPunCallbacks
             else if ((11 <= mal_pos && mal_pos <= 14) && 15 < caan_pos && caan_pos < 20)
                 return Caan.transform.GetChild(15).gameObject;
             else if ((20 <= mal_pos && mal_pos <= 24) && 16 <= caan_pos && caan_pos <= 19)
-                return Caan.transform.GetChild(15).gameObject;            
+                return Caan.transform.GetChild(15).gameObject;
         }
         return Caan.transform.GetChild(0).gameObject;
     }
@@ -1369,7 +1370,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 }
             }
         }
-        for(int k = 0; k<TrapType.Length; k++)
+        for (int k = 0; k < TrapType.Length; k++)
         {
             print("trap " + TrapType[k] + " is at " + trap_pos[TrapType[k]]);
         }
@@ -1377,7 +1378,7 @@ public class InGame : MonoBehaviourPunCallbacks
     }
     IEnumerator MoveMotion(GameObject moving_mal, GameObject des_caan, int moving_cnt)
     {
-        if(IsEspMoonWalkUsing && !IsEsp1Used)
+        if (IsEspMoonWalkUsing && !IsEsp1Used)
         {
             IsEsp1Used = true;
             PV.RPC("use_moon_walk", RpcTarget.All);
@@ -1398,20 +1399,20 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         int moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
         int des_caan_pos = int.Parse(des_caan.name);
-        int[] trap_pos = where_is_trap();        
+        int[] trap_pos = where_is_trap();
         GameObject layover_caan = way_over(moving_mal_pos, des_caan_pos);
         int layover_pos = -1;
         if (layover_caan.name != "0")
             layover_pos = int.Parse(layover_caan.name);
         print("layover moving.. mal pos: " + moving_mal_pos + ", des_can: " + des_caan_pos + ", layover: " + layover_pos);
-        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos, moving_cnt); 
+        int caught_trap_pos = check_trap(moving_mal_pos, layover_pos, trap_pos, moving_cnt);
 
 
         Vector3 layover_des;
         if (layover_caan.name == "0" || caught_trap_pos != -1)
         {
             layover_des = new Vector3(0f, 0f);
-            if(caught_trap_pos != -1)
+            if (caught_trap_pos != -1)
                 print("caught in trap before layover at " + caught_trap_pos);
         }
         else
@@ -1435,7 +1436,7 @@ public class InGame : MonoBehaviourPunCallbacks
 
 
         moving_mal_pos = int.Parse(moving_mal.transform.GetChild(2).name);
-        des_caan_pos = int.Parse(des_caan.name);        
+        des_caan_pos = int.Parse(des_caan.name);
         caught_trap_pos = check_trap(moving_mal_pos, des_caan_pos, trap_pos, moving_cnt);
         Vector3 des_pos;
         if (caught_trap_pos == -1)
@@ -1451,7 +1452,7 @@ public class InGame : MonoBehaviourPunCallbacks
             print("caught in trap after layover at " + caught_trap_pos);
             print("final moving.. mal pos: " + moving_mal_pos + ", des_can: " + caught_trap_pos);
         }
-        
+
         while (true)
         {
             moving_mal.transform.position = Vector2.MoveTowards(moving_mal.transform.position, des_pos, MoveSpeed * Time.deltaTime);
@@ -1522,11 +1523,11 @@ public class InGame : MonoBehaviourPunCallbacks
                 int[] esp_stack = { 0 };
                 string[] ment_stack = { "ÄâÄç!" };
                 StartCoroutine(show_esp_used(esp_stack, ment_stack, true));
-                
+
                 return;
             }
             else if (trap_type == 2)
-            {                
+            {
                 moved_mal.transform.position = Caan.transform.GetChild(0).transform.position + new Vector3(0f, 0.15f);
                 moved_mal.transform.GetChild(2).name = "0";
                 int[] trap_pos = where_is_trap();
@@ -1571,7 +1572,7 @@ public class InGame : MonoBehaviourPunCallbacks
                             }
                         }
                     }
-                    
+
                     return;
                 }
                 else
@@ -1580,7 +1581,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     string[] ment_stack = { "ÁýÀ¸·Î!" };
                     StartCoroutine(show_esp_used(esp_stack, ment_stack, false));
                 }
-                    
+
             }
         }
         moved_mal_pos = moved_mal.transform.GetChild(2).name;
@@ -1709,12 +1710,12 @@ public class InGame : MonoBehaviourPunCallbacks
         {
             moved_mal.transform.GetChild(0).gameObject.SetActive(false);
             moved_mal.transform.GetChild(1).gameObject.SetActive(false);
-        }        
+        }
         turn_on_off_all_moved_mal(true);
         IsMoving = false;
     }
 
-    
+
 
     bool Check_Mal_Movable(GameObject YutStackList, GameObject StartMalList)
     {
@@ -1789,7 +1790,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
             case 3: // ¹«ÀÎµµ
-                PV.RPC("use_island", RpcTarget.All, IsEsp1Using);
+                PV.RPC("click_island", RpcTarget.All, IsEsp1Using);
                 break;
             case 4: // ÅµÀÌ¿ä
                 IsEspKeepUsing = IsEsp1Using;
@@ -1803,7 +1804,7 @@ public class InGame : MonoBehaviourPunCallbacks
                 MyEspList.transform.GetChild(1).GetChild(0).gameObject.SetActive(IsEsp1Using);
                 break;
             case 7: // ¸ÞÅ¸¸ù
-                PV.RPC("use_metamong", RpcTarget.All, IsEsp1Using);
+                PV.RPC("click_metamong", RpcTarget.All, IsEsp1Using);
                 break;
             case 8: // ¹®¿öÅ©
                 PV.RPC("click_moon_walk", RpcTarget.All);
@@ -1831,7 +1832,7 @@ public class InGame : MonoBehaviourPunCallbacks
         int trap_pos = int.Parse(current_clicked_button.transform.parent.name);
         current_clicked_button.GetComponent<Button>().interactable = false;
         PV.RPC("Esp1Used", RpcTarget.All);
-        PV.RPC("PlantingTrap", RpcTarget.All, trap_type, trap_pos);        
+        PV.RPC("PlantingTrap", RpcTarget.All, trap_type, trap_pos);
     }
     [PunRPC]
     void PlantingTrap(int trap_type, int trap_pos)
@@ -1842,9 +1843,9 @@ public class InGame : MonoBehaviourPunCallbacks
         current_planting_trap.GetComponent<Button>().interactable = false;
         on_off_caan_trap(trap_type, false, trap_pos);
         int[] type = { 0, 0, 9 };
-        int[] esp_stack = { type[trap_type] };        
+        int[] esp_stack = { type[trap_type] };
         string[] trap = { "", "ÄâÄç!", "ÁýÀ¸·Î" };
-        string[] ment = { trap[trap_type]};
+        string[] ment = { trap[trap_type] };
         StartCoroutine(show_esp_used(esp_stack, ment, false));
     }
 
@@ -1856,7 +1857,7 @@ public class InGame : MonoBehaviourPunCallbacks
         string[] ment;
         ment = new string[src_ment.Length];
         src_ment.CopyTo(ment, 0);
-        if(src_esp_stack[0] == 7)
+        if (src_esp_stack[0] == 7)
         {
             float turn_show_time = 0;
             while (true)
@@ -1881,8 +1882,8 @@ public class InGame : MonoBehaviourPunCallbacks
                 ment[0] = "µû¶óÅ¥";
             }
         }
-        
-        
+
+
         for (int k = 0; k < esp_stack.Length; k++)
         {
             PopEspUsing.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = ESP_sprite[esp_stack[k]];
@@ -1927,12 +1928,6 @@ public class InGame : MonoBehaviourPunCallbacks
     }
 
 
-    [PunRPC]
-    void use_island(bool usingEsp1)
-    {
-        IsEspIslandUsing = usingEsp1;
-    }
-
     void click_go_back()
     {
         int op_mal_cnt = 0;
@@ -1953,9 +1948,9 @@ public class InGame : MonoBehaviourPunCallbacks
         }
         else
             IsEsp1Using = false;
-        IsEspGoBackUsing = IsEsp1Using;        
+        IsEspGoBackUsing = IsEsp1Using;
     }
-    
+
     void click_change_pos()
     {
         if (IsEsp1Using)
@@ -1986,7 +1981,7 @@ public class InGame : MonoBehaviourPunCallbacks
                     {
                         MalBox.transform.GetChild(k).GetChild(3).GetChild(0).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
                         MalBox.transform.GetChild(k).GetChild(3).GetChild(1).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
-                        MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);                        
+                        MalBox.transform.GetChild(k).GetChild(3).GetChild(2).GetComponent<SpriteRenderer>().color = new Color(200 / 255f, 150 / 255f, 150 / 255f, 1f);
                         MalBox.transform.GetChild(k).GetChild(3).gameObject.SetActive(true);
                     }
                 }
@@ -2080,7 +2075,7 @@ public class InGame : MonoBehaviourPunCallbacks
             RollButton.GetComponent<Image>().sprite = Esp_Dice_sprite[12];
             RollButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "ROLL!";
             RollButton.transform.GetChild(0).GetComponent<TMP_Text>().color = new Color(54 / 255f, 255 / 255f, 255 / 255f, 1f);
-            RollButton.GetComponent<RectTransform>().sizeDelta = new Vector2(60f, 60f);            
+            RollButton.GetComponent<RectTransform>().sizeDelta = new Vector2(60f, 60f);
             IsEspDiceUsing = true;
         }
         else
@@ -2151,6 +2146,17 @@ public class InGame : MonoBehaviourPunCallbacks
     void click_moon_walk()
     {
         IsEspMoonWalkUsing = IsEsp1Using;
+    }
+
+    [PunRPC]
+    void click_metamong()
+    {
+        IsEspMetamongUsing = IsEsp1Using;
+    }
+    [PunRPC]
+    void click_island()
+    {
+        IsEspIslandUsing = IsEsp1Using;
     }
 
     void OpMalClick(GameObject clicked_mal)
@@ -2554,17 +2560,14 @@ public class InGame : MonoBehaviourPunCallbacks
     {
         IsEspFalseStartUsing = esp_using;
     }
-
-    [PunRPC]
-    void use_metamong(bool esp_using)
-    {
-        IsEspMetamongUsing = esp_using;
-    }
+    
     [PunRPC]
     void use_mimikyu(bool IsMaster)
     {
         IsEspMimikyuUsed = true;
         WhoUsedMimikyu = IsMaster;
+        if (PhotonNetwork.IsMasterClient == IsMaster)
+            IsEsp1Using = false;
     }
 
     [PunRPC]

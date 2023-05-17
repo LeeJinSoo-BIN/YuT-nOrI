@@ -73,6 +73,8 @@ MonoBehaviour:
   - use_mimikyu
   - use_moon_walk
   - click_moon_walk
+  - click_island
+  - click_metamong
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
