@@ -156,5 +156,5 @@
 Music promoted by https://www.chosic.com/free-music/all/ <br>
 Creative Commons CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
- 윷, 주사위 소리 https://www.youtube.com/@mpooman
-
+ 윷, 주사위 소리 - 유튜브 채널 https://www.youtube.com/@mpooman <br>
+ 기타 효과음 - 유튜브 채널 https://www.youtube.com/@DayDreamSound

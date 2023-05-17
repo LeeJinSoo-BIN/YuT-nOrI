@@ -96,7 +96,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
 #if UNITY_ANDROID
         Screen.SetResolution(1920, 1080, false);
-#else
+        OptionPanel.transform.GetChild(2).gameObject.SetActive(false);
+        OptionPanel.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 200);
         Screen.SetResolution(960, 540, false);
 #endif
     }
