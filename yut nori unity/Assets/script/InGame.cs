@@ -122,14 +122,14 @@ public class InGame : MonoBehaviourPunCallbacks
     private bool IsEsp2Used = false;
     private bool IsRolled = false;
     private int[] TrapType = new int[] { 1, 2 }; // 1 == ÄâÄç, 2 == ÁýÀ¸·Î
-    public bool IsEspIslandUsing = false;
+    private bool IsEspIslandUsing = false;
     private bool IsEspKeepUsing = false;
     private bool IsEspGoBackUsing = false;
     private bool IsEspFalseStartUsing = false;
     private bool IsEspMetamongUsing = false;
     private bool IsEspChangePosUsing = false;
     private bool IsEspMagnetUsing = false;
-    public bool IsEspDiceUsing = false;
+    private bool IsEspDiceUsing = false;
     private int EspChangeIndex1 = -1;
     private int EspChangeIndex2 = -1;
     private int EspMagnetMovingMalIndex = -1;
@@ -2611,7 +2611,7 @@ public class InGame : MonoBehaviourPunCallbacks
             back = 5;
         else if (des_pos == 24)
             front = 15;        
-        else if (des_pos == 25)        
+        else if (des_pos == 25)
             back = 10;        
         else if (des_pos == 27)
         {            
@@ -3165,6 +3165,8 @@ public class InGame : MonoBehaviourPunCallbacks
         IsEspMagnetUsing = false;
         IsEspDiceUsing = false;
         IsEspMoonWalkUsing = false;
+        IsEspMimikyuUsed = false;
+        IsEspMimikyuUsing = false;
         click_dice();
 
 
